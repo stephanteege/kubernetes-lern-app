@@ -1,0 +1,1343 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kubernetes Lern-App</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #121212;
+            color: #e2e8f0;
+        }
+        .container {
+            max-width: 1200px;
+        }
+        .card {
+            background-color: #1e1e1e;
+            border-radius: 1.5rem;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3), 0 4px 6px -2px rgba(0, 0, 0, 0.2);
+        }
+        .nav-button {
+            transition: all 0.2s ease-in-out;
+        }
+        .nav-button:hover {
+            transform: scale(1.05);
+        }
+        .nav-button.active {
+            background-color: #2563eb;
+            color: white;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        }
+        .status-badge {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            border-radius: 9999px;
+        }
+        .status-running {
+            background-color: #0d9488;
+            color: #ccfbf1;
+        }
+        .status-terminating {
+            background-color: #b91c1c;
+            color: #fee2e2;
+        }
+        .status-restored {
+            background-color: #1e40af;
+            color: #dbeafe;
+        }
+        .status-crashing {
+            background-color: #7f1d1d;
+            color: #fee2e2;
+        }
+        .terminal {
+            background-color: #1a1a1a;
+            color: #d1fae5;
+            font-family: 'Courier New', Courier, monospace;
+            border-radius: 0.75rem;
+            box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.6);
+            padding: 1rem;
+            min-height: 200px;
+        }
+        .terminal-input {
+            background-color: transparent;
+            border: none;
+            outline: none;
+            color: #d1fae5;
+            width: calc(100% - 1.5rem);
+            caret-color: #d1fae5;
+        }
+        .code-block {
+            background-color: #2d3748;
+            color: #e2e8f0;
+            padding: 1rem;
+            border-radius: 0.5rem;
+            overflow-x: auto;
+            white-space: pre;
+            margin-top: 1rem;
+            font-family: 'Courier New', Courier, monospace;
+        }
+        #dashboard-canvas {
+            background-color: #2d2d2d;
+            border-radius: 1.5rem;
+        }
+        .canvas-container {
+            width: 100%;
+            height: 400px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .anleitung-content h1, .anleitung-content h2, .anleitung-content h3, .anleitung-content h4, .anleitung-content p, .anleitung-content pre, .anleitung-content ul, .anleitung-content table {
+            color: #e2e8f0;
+            margin-bottom: 1rem;
+        }
+        .anleitung-content h1 { font-size: 2.5rem; font-weight: 700; margin-top: 2rem; }
+        .anleitung-content h2 { font-size: 2rem; font-weight: 600; margin-top: 1.5rem; }
+        .anleitung-content h3 { font-size: 1.5rem; font-weight: 600; margin-top: 1.25rem; }
+        .anleitung-content table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 1rem;
+            margin-bottom: 1.5rem;
+        }
+        .anleitung-content th, .anleitung-content td {
+            padding: 0.75rem;
+            border: 1px solid #4a5568;
+            text-align: left;
+        }
+        .anleitung-content th {
+            background-color: #2d3748;
+            font-weight: 700;
+        }
+        .anleitung-content p code {
+            background-color: #2d3748;
+            padding: 0.25rem 0.5rem;
+            border-radius: 0.25rem;
+            font-family: 'Courier New', Courier, monospace;
+        }
+        .anleitung-content pre {
+            background-color: #1a202c;
+            padding: 1rem;
+            border-radius: 0.5rem;
+            overflow-x: auto;
+        }
+        .anleitung-content ul {
+            list-style-type: disc;
+            padding-left: 2rem;
+        }
+        .anleitung-content .lead {
+            font-size: 1.25rem;
+            font-style: italic;
+            border-left: 4px solid #4299e1;
+            padding-left: 1rem;
+            margin-bottom: 2rem;
+        }
+        /* Custom Styling for Legal Section */
+        #datenschutz-impressum-section h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 1.5rem;
+            color: #e2e8f0;
+            border-bottom: 2px solid #4a5568;
+            padding-bottom: 0.5rem;
+        }
+        #datenschutz-impressum-section h2 {
+            font-size: 1.75rem;
+            font-weight: 600;
+            margin-top: 2rem;
+            margin-bottom: 1rem;
+            color: #4299e1;
+        }
+        #datenschutz-impressum-section h3 {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-top: 1rem;
+            margin-bottom: 0.5rem;
+        }
+        #datenschutz-impressum-section ul {
+            list-style-type: disc;
+            padding-left: 2rem;
+            margin-bottom: 1rem;
+        }
+    </style>
+</head>
+<body class="p-8">
+    <div class="container mx-auto">
+        <header class="text-center mb-4">
+            <h1 class="text-5xl font-extrabold text-gray-100 mb-2">Kubernetes Lern-App</h1>
+            <p class="text-xl text-gray-400">Lernen Sie Kubernetes mit Simulation, Quiz und Lexikon.</p>
+        </header>
+
+        <nav class="flex justify-center space-x-4 mb-8">
+            <button id="nav-startseite" class="nav-button px-6 py-3 rounded-full text-lg font-medium text-gray-300 bg-gray-700 active">Startseite</button>
+            <button id="nav-simulator" class="nav-button px-6 py-3 rounded-full text-lg font-medium text-gray-300 bg-gray-700">Simulator & Dashboard</button>
+            <button id="nav-quiz" class="nav-button px-6 py-3 rounded-full text-lg font-medium text-gray-300 bg-gray-700">Quiz</button>
+            <button id="nav-lexikon" class="nav-button px-6 py-3 rounded-full text-lg font-medium text-gray-300 bg-gray-700">Wissenslexikon</button>
+            <button id="nav-prezi" class="nav-button px-6 py-3 rounded-full text-lg font-medium text-gray-300 bg-gray-700">Präsentation</button>
+            <button id="nav-anleitung" class="nav-button px-6 py-3 rounded-full text-lg font-medium text-gray-300 bg-gray-700">Anleitung</button>
+            <button id="nav-quellen" class="nav-button px-6 py-3 rounded-full text-lg font-medium text-gray-300 bg-gray-700">Quellen</button>
+        </nav>
+
+        <main class="card p-8">
+            <section id="startseite-section" class="active-section">
+                <div class="flex flex-col items-center justify-center p-8 text-center">
+                    <h2 class="text-3xl font-bold text-gray-100 mb-4">Willkommen bei der Kubernetes Lern-App</h2>
+                    <p class="text-lg text-gray-400 max-w-2xl">
+                        Diese interaktive Anwendung hilft dir, die Kernkonzepte von Kubernetes auf spielerische Weise kennenzulernen und zu vertiefen.
+                        Nutze den Simulator, um Pods zu erstellen und zu verwalten, teste dein Wissen im Quiz und finde wichtige Begriffe im Wissenslexikon.
+                    </p>
+                </div>
+            </section>
+
+            <section id="simulator-section" class="hidden">
+                <h2 class="text-3xl font-bold text-gray-100 mb-4">Cluster-Simulator</h2>
+                <div class="mb-6">
+                    <p class="text-gray-400 mb-2">Geben Sie Befehle ein: <code class="bg-gray-700 text-gray-300 p-1 rounded">kubectl get pods</code> (zeigt Pods an), <code class="bg-gray-700 text-gray-300 p-1 rounded">kubectl delete pod &lt;name&gt;</code> (löscht einen Pod), <code class="bg-gray-700 text-gray-300 p-1 rounded">kubectl scale deployment --replicas=&lt;zahl&gt;</code> (skaliert die Pods) oder <code class="bg-gray-700 text-gray-300 p-1 rounded">kubectl rollout restart</code> (startet ein Rolling Update, bei dem Pods nacheinander ersetzt werden).</p>
+                    <p class="text-gray-400 mb-2">Im Dashboard wird die Last der Pods visuell als Prozentsatz angezeigt. Dieser Wert ändert sich dynamisch je nach Anzahl der laufenden Pods.</p>
+                    <div class="terminal">
+                        <pre id="output-text" class="text-sm whitespace-pre-wrap"></pre>
+                        <div class="flex items-center">
+                            <span class="text-green-400">$</span>
+                            <input type="text" id="kubectl-input" class="terminal-input ml-2" spellcheck="false" placeholder="kubectl ...">
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="flex flex-col lg:flex-row lg:space-x-8 mt-6">
+                    <div id="pod-list-container" class="lg:w-1/2">
+                        <h3 class="text-xl font-semibold mb-2">Aktive Pods:</h3>
+                        <div id="pod-list" class="space-y-2">
+                            </div>
+                    </div>
+                    
+                    <div class="lg:w-1/2 flex flex-col items-center mt-6 lg:mt-0">
+                        <h3 class="text-xl font-semibold mb-2">Dashboard:</h3>
+                        <div class="canvas-container">
+                             <canvas id="dashboard-canvas" class="w-full h-full max-w-full rounded-xl"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section id="quiz-section" class="hidden">
+                <h2 class="text-3xl font-bold text-gray-100 mb-6">Quiz</h2>
+                <div id="quiz-content">
+                    </div>
+                <div id="quiz-buttons" class="mt-6 flex justify-center">
+                    <button id="start-quiz-button" class="px-6 py-3 bg-blue-600 text-white font-semibold rounded-full hover:bg-blue-700 transition-colors">Quiz starten</button>
+                </div>
+            </section>
+
+            <section id="lexikon-section" class="hidden">
+                <h2 class="text-3xl font-bold text-gray-100 mb-4">Wissenslexikon</h2>
+                <div id="lexikon-summary" class="bg-blue-900 p-6 rounded-xl border border-blue-800 mb-6"></div>
+                <div class="mb-4">
+                    <input type="text" id="lexikon-search" class="w-full p-3 bg-gray-800 text-gray-200 border border-gray-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Begriffe suchen...">
+                </div>
+                <div id="lexikon-content" class="space-y-6">
+                    </div>
+                <div class="mt-8 text-center text-gray-400">
+                    <p>Weitere Informationen finden Sie in der offiziellen Dokumentation:</p>
+                    <a href="https://kubernetes.io/docs" target="_blank" class="text-blue-500 hover:underline">kubernetes.io/docs</a>
+                </div>
+            </section>
+            
+            <section id="prezi-section" class="hidden">
+                <h2 class="text-3xl font-bold text-gray-100 mb-4">Präsentation</h2>
+                <div class="card p-4">
+                    <p class="text-gray-400 mb-4">Hier sehen Sie die Prezi-Präsentation über die Grundlagen von Kubernetes.</p>
+                    <iframe src="https://prezi.com/p/embed/gBUe4X5K7YTeScFim8Nw/" width="100%" height="600" frameborder="0" webkitallowfullscreen mozallowfullscreen allowfullscreen allow="autoplay; fullscreen"></iframe>
+                </div>
+            </section>
+
+            <section id="anleitung-section" class="hidden anleitung-content">
+                <h1>KUBERNETES EINFÜHRUNG - FERTIGER WEBSERVER IN 6 SCHRITTEN</h1>
+                <p class="lead">Willkommen in der Welt von Kubernetes! Mit dieser Anleitung zeige ich euch, wie Kubernetes (K8s) moderne Anwendungen verwaltet.</p>
+                <p>Wir werden einen fertigen Webserver (Nginx) aus dem Internet verwenden – ganz ohne eine einzige Zeile Code selbst schreiben zu müssen. Das Ziel ist es, in kürzester Zeit die Kernkonzepte zu demonstrieren, die Kubernetes zur führenden Plattform für den Betrieb von Anwendungen machen:</p>
+                <ul>
+                    <li><strong>Bereitstellung (Deployment):</strong> Wie man einen Container startet.</li>
+                    <li><strong>Erreichbarkeit (Service):</strong> Wie man diesen Container öffentlich zugänglich macht.</li>
+                    <li><strong>Skalierung:</strong> Wie man die Anwendung in Sekundenschnelle vervielfacht.</li>
+                    <li><strong>Selbstheilung:</strong> Wie Kubernetes Ausfälle automatisch repariert.</li>
+                </ul>
+                <p>Folgt den Anweisungen im Terminal exakt – los geht’s!</p>
+
+                ---
+                <h2>1. Vorbereitung und Cluster-Start (Terminal-Befehle)</h2>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Aktion</th>
+                            <th>Kommando</th>
+                            <th>Erklärung</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Arbeitsordner erstellen</td>
+                            <td><code>mkdir kubernetes-anleitung</code></td>
+                            <td>Erstellt einen neuen Ordner, um die Konfigurationsdateien sauber zu speichern.</td>
+                        </tr>
+                        <tr>
+                            <td>In Ordner wechseln</td>
+                            <td><code>cd kubernetes-anleitung</code></td>
+                            <td>Wir arbeiten nun in diesem Ordner, damit Kubernetes die Dateien findet.</td>
+                        </tr>
+                        <tr>
+                            <td>Minikube starten</td>
+                            <td><code>minikube start</code></td>
+                            <td>Startet den lokalen Kubernetes-Cluster (den Server) in einer virtuellen Maschine. Dies kann einen Moment dauern.</td>
+                        </tr>
+                        <tr>
+                            <td>Status prüfen</td>
+                            <td><code>kubectl cluster-info</code></td>
+                            <td>Überprüft, ob das kubectl-Tool erfolgreich mit dem laufenden Minikube-Cluster verbunden ist.</td>
+                        </tr>
+                    </tbody>
+                </table>
+                
+                ---
+                <h2>2. Das Deployment definieren (Anweisung 1: Container und Kopien)</h2>
+                <p>Wir verwenden <code>nano</code> zum Erstellen der Datei. Denke daran: Nach dem Einfügen speicherst du mit <code>STRG + O</code>, bestätigst mit <code>Enter</code> und schließt mit <code>STRG + X</code>.</p>
+                <h3>Datei erstellen: <code>webserver-app.yaml</code></h3>
+                <p><code>nano webserver-app.yaml</code></p>
+                <h3>Inhalt von <code>webserver-app.yaml</code>:</h3>
+                <pre># Die folgenden Zeilen definieren die Regeln für unseren Webserver:
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: einfacher-webserver
+  labels:                  
+    app: meine-seite
+spec:
+  replicas: 2              
+  selector:
+    matchLabels:
+      app: meine-seite     
+  template:                
+    metadata:
+      labels:
+        app: meine-seite   
+    spec:
+      containers:          
+      - name: nginx-container
+        image: nginx:latest
+        ports:
+        - containerPort: 80</pre>
+                
+                ---
+                <h2>3. Den Service definieren (Anweisung 2: Zugang und Load Balancer)</h2>
+                <p>Dieser Service macht die gestarteten Container für uns von außen erreichbar.</p>
+                <h3>Datei erstellen: <code>webserver-zugang.yaml</code></h3>
+                <p><code>nano webserver-zugang.yaml</code></p>
+                <h3>Inhalt von <code>webserver-zugang.yaml</code>:</h3>
+                <pre># Die folgenden Zeilen definieren den Service für den Zugang zu den Pods:
+apiVersion: v1
+kind: Service
+metadata:
+  name: webserver-service
+spec:
+  selector:
+    app: meine-seite
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 80
+  type: NodePort</pre>
+
+                ---
+                <h2>4. Konfiguration anwenden und Status prüfen</h2>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Aktion</th>
+                            <th>Kommando</th>
+                            <th>Erklärung</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Deployment anwenden</td>
+                            <td><code>kubectl apply -f webserver-app.yaml</code></td>
+                            <td>Weist Kubernetes an, den gewünschten Zustand (2 Nginx-Pods) herzustellen.</td>
+                        </tr>
+                        <tr>
+                            <td>Service anwenden</td>
+                            <td><code>kubectl apply -f webserver-zugang.yaml</code></td>
+                            <td>Weist Kubernetes an, den Load Balancer für die Pods einzurichten.</td>
+                        </tr>
+                        <tr>
+                            <td>Laufende Pods prüfen</td>
+                            <td><code>kubectl get pods</code></td>
+                            <td>Zeigt die Pods an. Warte, bis der Status <strong>Running</strong> ist.</td>
+                        </tr>
+                        <tr>
+                            <td>Deployment-Status prüfen</td>
+                            <td><code>kubectl get deployment einfacher-webserver</code></td>
+                            <td>Zeigt den Gesamtstatus: <strong>READY 2/2</strong> bedeutet, dass 2 von 2 gewünschten Pods laufen.</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                ---
+                <h2>5. Präsentation: Zugreifen und Demos</h2>
+                <h3>Anwendung im Browser öffnen:</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Aktion</th>
+                            <th>Kommando</th>
+                            <th>Erklärung</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Webseite aufrufen</td>
+                            <td><code>minikube service webserver-service</code></td>
+                            <td>Minikube ermittelt die externe URL des Services und öffnet die Nginx-Seite im Browser.</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <h3>Demo 1: Skalierung (Horizontale Skalierung)</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Aktion</th>
+                            <th>Kommando</th>
+                            <th>Erklärung</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Skalieren auf 5</td>
+                            <td><code>kubectl scale deployment einfacher-webserver --replicas=5</code></td>
+                            <td>Erhöht die gewünschte Pod-Anzahl auf 5. Kubernetes reagiert sofort.</td>
+                        </tr>
+                        <tr>
+                            <td>Pods prüfen</td>
+                            <td><code>kubectl get pods</code></td>
+                            <td>Zeigt, wie 3 neue Pods erstellt werden (Gesamt: 5).</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <h3>Demo 2: Selbstheilung (Ausfallsicherheit)</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Aktion</th>
+                            <th>Kommando</th>
+                            <th>Erklärung</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Namen ermitteln</td>
+                            <td><code>kubectl get pods</code></td>
+                            <td>Notiere einen der Pod-Namen (z.B. <code>einfacher-webserver-xyz...</code>).</td>
+                        </tr>
+                        <tr>
+                            <td>Pod löschen</td>
+                            <td><code>kubectl delete pod &lt;HIER DEN NAMEN EINFÜGEN&gt;</code></td>
+                            <td>Simuliert einen Absturz oder Ausfall eines Containers.</td>
+                        </tr>
+                        <tr>
+                            <td>Pods prüfen</td>
+                            <td><code>kubectl get pods</code></td>
+                            <td>Zeigt, wie der gelöschte Pod verschwindet und fast sofort ein neuer Pod erstellt wird, um die Zielzahl 5 zu halten.</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                ---
+                <h2>6. Aufräumen</h2>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Aktion</th>
+                            <th>Kommando</th>
+                            <th>Erklärung</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Ressourcen löschen</td>
+                            <td><code>kubectl delete deployment einfacher-webserver</code></td>
+                            <td>Löscht das Deployment und damit alle gestarteten Container.</td>
+                        </tr>
+                        <tr>
+                            <td>Service löschen</td>
+                            <td><code>kubectl delete service webserver-service</code></td>
+                            <td>Entfernt den Zugangspunkt.</td>
+                        </tr>
+                        <tr>
+                            <td>Minikube stoppen</td>
+                            <td><code>minikube stop</code></td>
+                            <td>Fährt die virtuelle Maschine mit dem Cluster herunter, um Ressourcen deines PCs freizugeben.</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </section>
+            
+            <section id="quellen-section" class="hidden">
+                <h2 class="text-3xl font-bold text-gray-100 mb-4">Quellen & Ressourcen</h2>
+                <div class="card p-4">
+                    <p class="text-gray-400 mb-4">Hier findest du nützliche Links und Quellen für dein Kubernetes-Studium.</p>
+                    <ul class="list-disc space-y-2 text-gray-300">
+                        <li><a href="https://kubernetes.io/docs/" target="_blank" class="text-blue-500 hover:underline"><strong>Offizielle Kubernetes-Dokumentation:</strong></a> Die umfassendste und aktuellste Quelle.</li>
+                        <li><a href="https://cncf.io/" target="_blank" class="text-blue-500 hover:underline"><strong>Cloud Native Computing Foundation (CNCF):</strong></a> Die Organisation, die Kubernetes und andere Cloud-native Projekte verwaltet.</li>
+                        <li><a href="https://docs.docker.com/" target="_blank" class="text-blue-500 hover:underline"><strong>Docker-Dokumentation:</strong></a> Wichtig für das Verständnis von Containern, der Grundlage von Kubernetes.</li>
+                        <li><a href="https://minikube.sigs.k8s.io/docs/" target="_blank" class="text-blue-500 hover:underline"><strong>Minikube-Dokumentation:</strong></a> Die offizielle Anleitung für das lokale Kubernetes-Cluster.</li>
+                        <li><a href="https://helm.sh/docs/" target="_blank" class="text-blue-500 hover:underline"><strong>Helm-Dokumentation:</strong></a> Ein Paketmanager für Kubernetes, ideal für die Verwaltung komplexer Anwendungen.</li>
+                        <li><a href="https://prometheus.io/docs/" target="_blank" class="text-blue-500 hover:underline"><strong>Prometheus-Dokumentation:</strong></a> Führendes Open-Source-Monitoring-System, oft in Kubernetes-Umgebungen verwendet.</li>
+                        <li><a href="https://www.linuxfoundation.org/" target="_blank" class="text-blue-500 hover:underline"><strong>The Linux Foundation:</strong></a> Bietet Kurse und Zertifizierungen für Kubernetes und andere Open-Source-Technologien.</li>
+                        <li><a href="https://kubernetes.io/blog/" target="_blank" class="text-blue-500 hover:underline"><strong>Kubernetes-Blog:</strong></a> Neuigkeiten, Ankündigungen und Artikel der Kubernetes-Community.</li>
+                        <li><a href="https://github.com/cncf/" target="_blank" class="text-blue-500 hover:underline"><strong>CNCF GitHub-Repository:</strong></a> Einsicht in die Entwicklung und Codebasis der Cloud-native-Projekte.</li>
+                        <li><a href="https://github.com/kubernetes/" target="_blank" class="text-blue-500 hover:underline"><strong>Kubernetes GitHub:</strong></a> Der offizielle Code des Kubernetes-Projekts.</li>
+                        <li>Buch: "Kubernetes: Up and Running":</strong></a> Ein Standardwerk zur Einführung in die Kubernetes-Praxis.</li>
+                    </ul>
+                </div>
+            </section>
+            
+            <section id="datenschutz-impressum-section" class="hidden anleitung-content">
+                <h1>Impressum & Datenschutz</h1>
+
+                <h2>Impressum</h2>
+
+                <h3>Angaben gemäß § 5 TMG (Telemediengesetz)</h3>
+                <p><strong>Stephan Teege</strong><br>Buchholzgasse 24<br>99425 Weimar</p>
+
+                <h3>Kontakt</h3>
+                <p><strong>E-Mail:</strong> <a href="mailto:stephan.teege@gmx.de" class="text-blue-400 hover:underline">stephan.teege@gmx.de</a><br>
+                   <strong>Telefon:</strong> 017647191285</p>
+
+                <h3>Verantwortlich für den Inhalt nach § 55 Abs. 2 RStV</h3>
+                <p>Stephan Teege<br>Buchholzgasse 24, 99425 Weimar</p>
+                
+                <h3 class="mt-4">Hinweis zum Projekt</h3>
+                <p>Die Kubernetes Lern-App wurde im Rahmen des Kurses VI23 als akademisches Projekt erstellt. Die Anwendung dient ausschließlich zu Lern-, Demonstrations- und Informationszwecken rund um die Kernkonzepte von Kubernetes (z.B. Pods, Deployments, Services).</p>
+                <p>Der enthaltene Simulator ist eine vereinfachte Darstellung und ersetzt keine echte Kubernetes-Umgebung. Es handelt sich um kein kommerzielles oder offizielles Angebot.</p>
+
+                <h2 class="mt-8">Datenschutzerklärung</h2>
+
+                <h3>1. Verantwortliche Stelle</h3>
+                <p>Verantwortlich für die Datenverarbeitung auf dieser Website ist:<br>
+                   <strong>Stephan Teege</strong><br>Buchholzgasse 24<br>99425 Weimar<br>
+                   E-Mail: stephan.teege@gmx.de</p>
+
+                <h3>2. Grundsätze der Datenverarbeitung</h3>
+                <p>Diese Website ist ein nicht-kommerzielles, akademisches Projekt. Die gesamte Anwendungslogik (Simulator, Quiz-Auswertung) findet **lokal im Browser** des Nutzers statt. Wir speichern **keine personenbezogenen Daten** unserer Nutzer dauerhaft auf eigenen Systemen. Eine Verarbeitung erfolgt lediglich durch das Hosting und die Einbindung externer Dienste.</p>
+
+                <h3>3. Hosting und Server-Log-Dateien (GitHub Pages)</h3>
+                <p>Diese Website wird über **GitHub Pages** (Anbieter: GitHub, Inc., USA) gehostet. Beim Besuch der Website verarbeitet GitHub automatisch Informationen, die für den Betrieb und die Sicherheit notwendig sind (Server-Log-Dateien). Dazu gehören die **IP-Adresse**, der Zeitpunkt des Zugriffs und der Browsertyp.</p>
+                <p>Die Verarbeitung erfolgt aufgrund unseres berechtigten Interesses an einem technisch fehlerfreien und sicheren Betrieb (Art. 6 Abs. 1 lit. f DSGVO). Die Datenübermittlung in die USA ist dabei nicht ausgeschlossen.</p>
+
+                <h3>4. Externe Einbindung von Schriftarten und Design (CDNs)</h3>
+                <p>Zur einheitlichen Darstellung und schnellen Ladegeschwindigkeit nutzt diese App externe Dienste, sogenannte Content Delivery Networks (CDNs). Beim Aufruf der Seite baut Ihr Browser eine direkte Verbindung zu den Servern dieser Anbieter auf, wodurch Ihre **IP-Adresse** an diese übermittelt wird.</p>
+
+                <h4>a) Google Fonts</h4>
+                <p>Wir verwenden **Google Fonts** für die Schriftart 'Inter'.</p>
+                <ul>
+                    <li>**Zweck:** Einheitliche und ästhetische Darstellung der Website.</li>
+                    <li>**Rechtsgrundlage:** Berechtigtes Interesse (Art. 6 Abs. 1 lit. f DSGVO).</li>
+                    <li>**Anbieter:** Google Ireland Limited, Gordon House, Barrow Street, Dublin 4, Irland.</li>
+                    <li>**Hinweis:** Die Übermittlung der IP-Adresse an Google ist notwendig, um die Schriftarten zu laden.</li>
+                </ul>
+                
+                <h4>b) Tailwind CSS CDN</h4>
+                <p>Zum Laden des Styling-Frameworks wird ein CDN verwendet.</p>
+                <ul>
+                    <li>**Zweck:** Schnelles und zuverlässiges Laden des Designs.</li>
+                    <li>**Rechtsgrundlage:** Berechtigtes Interesse (Art. 6 Abs. 1 lit. f DSGVO).</li>
+                    <li>**Hinweis:** Auch hierbei wird Ihre IP-Adresse an den CDN-Anbieter übermittelt.</li>
+                </ul>
+
+                <h3>5. Ihre Rechte als betroffene Person</h3>
+                <p>Sie haben uns gegenüber hinsichtlich der Sie betreffenden personenbezogenen Daten folgende Rechte:</p>
+                <ul>
+                    <li>Recht auf Auskunft (Art. 15 DSGVO)</li>
+                    <li>Recht auf Berichtigung (Art. 16 DSGVO)</li>
+                    <li>Recht auf Löschung (Art. 17 DSGVO)</li>
+                    <li>Recht auf Einschränkung der Verarbeitung (Art. 18 DSGVO)</li>
+                    <li>Recht auf Datenübertragbarkeit (Art. 20 DSGVO)</li>
+                    <li>Recht auf Widerspruch gegen die Verarbeitung (Art. 21 DSGVO)</li>
+                </ul>
+                <p>Wenn Sie der Ansicht sind, dass die Verarbeitung Ihrer Daten gegen das Datenschutzrecht verstößt, haben Sie zudem das Recht, sich bei einer Datenschutz-Aufsichtsbehörde zu beschweren.</p>
+            </section>
+        </main>
+
+        <footer class="mx-auto text-center mt-8 p-4 text-sm text-gray-500">
+            <p>Erstellt von: Stephan Teege | Kurs: VI23 | Version: 1.8 (Stand: 25.09.2025)</p>
+            <p class="mt-1">
+                <button id="nav-impressum" class="text-blue-500 hover:underline">Impressum & Datenschutz</button>
+            </p>
+        </footer>
+    </div>
+
+    <script>
+        // Global state and UI elements
+        const navButtons = document.querySelectorAll('nav button');
+        // NEU: Hinzufügen der neuen Sektion zum Sektionen-Objekt
+        const sections = {
+            startseite: document.getElementById('startseite-section'),
+            simulator: document.getElementById('simulator-section'),
+            quiz: document.getElementById('quiz-section'),
+            lexikon: document.getElementById('lexikon-section'),
+            prezi: document.getElementById('prezi-section'),
+            anleitung: document.getElementById('anleitung-section'),
+            quellen: document.getElementById('quellen-section'),
+            // NEUE SEKTION
+            legal: document.getElementById('datenschutz-impressum-section') 
+        };
+        const lexikonSummary = document.getElementById('lexikon-summary');
+        
+        // Füge den Event Listener für den Impressum-Button im Footer hinzu
+        document.getElementById('nav-impressum').addEventListener('click', () => {
+            // Alle Sektionen und Nav-Buttons deaktivieren
+            navButtons.forEach(btn => btn.classList.remove('active'));
+            Object.values(sections).forEach(section => section.classList.add('hidden'));
+
+            // Rechtliche Sektion anzeigen
+            sections.legal.classList.remove('hidden');
+        });
+
+        // --- Navigation Logic ---
+        navButtons.forEach(button => {
+            button.addEventListener('click', () => {
+                // Remove active class from all buttons and sections
+                navButtons.forEach(btn => btn.classList.remove('active'));
+                Object.values(sections).forEach(section => section.classList.add('hidden'));
+
+                // Add active class to the clicked button and show the corresponding section
+                button.classList.add('active');
+                if (button.id === 'nav-startseite') {
+                    sections.startseite.classList.remove('hidden');
+                } else if (button.id === 'nav-simulator') {
+                    sections.simulator.classList.remove('hidden');
+                    // FIX: Größe der Canvas beim Anzeigen der Sektion neu berechnen.
+                    resizeCanvas();
+                } else if (button.id === 'nav-quiz') {
+                    sections.quiz.classList.remove('hidden');
+                } else if (button.id === 'nav-lexikon') {
+                    sections.lexikon.classList.remove('hidden');
+                    renderLexikonSummary();
+                    renderLexikon(lexikonData);
+                } else if (button.id === 'nav-prezi') {
+                    sections.prezi.classList.remove('hidden');
+                } else if (button.id === 'nav-anleitung') {
+                    sections.anleitung.classList.remove('hidden');
+                } else if (button.id === 'nav-quellen') {
+                    sections.quellen.classList.remove('hidden');
+                }
+                // HINWEIS: Hier wurde kein Fall für 'nav-impressum' mehr benötigt, da es ein separater Listener ist.
+            });
+        });
+
+        // --- Simulator & Dashboard Logic ---
+        const kubectlInput = document.getElementById('kubectl-input');
+        const outputText = document.getElementById('output-text');
+        const podListContainer = document.getElementById('pod-list');
+        const dashboardCanvas = document.getElementById('dashboard-canvas');
+        const ctx = dashboardCanvas.getContext('2d');
+        const maxPods = 10;
+        let pods = [];
+        let podCounter = 0;
+        let deploymentVersion = 1;
+        let desiredReplicas = 2;
+        let isInitialized = false;
+        let rollingUpdateInProgress = false;
+        
+        // Node definitions for the dashboard (simplified to a single area)
+        const node = { id: 'node1', x: 0, y: 0, width: 0, height: 0, pods: [] };
+
+        // Resize canvas to fit container
+        function resizeCanvas() {
+            const container = dashboardCanvas.parentElement;
+            // Nur neu setzen, wenn der Container sichtbar ist
+            if (container.offsetWidth > 0 && container.offsetHeight > 0) {
+                 dashboardCanvas.width = container.clientWidth;
+                 dashboardCanvas.height = container.clientHeight;
+            } else {
+                 // Fallback für den Fall, dass es beim Start aufgerufen wird, bevor es sichtbar ist
+                 dashboardCanvas.width = 1;
+                 dashboardCanvas.height = 1;
+                 return;
+            }
+
+
+            const canvasWidth = dashboardCanvas.width;
+            const canvasHeight = dashboardCanvas.height;
+
+            node.x = canvasWidth * 0.15;
+            node.y = canvasHeight * 0.15;
+            node.width = canvasWidth * 0.7;
+            node.height = canvasHeight * 0.7;
+        }
+        window.addEventListener('resize', resizeCanvas);
+        resizeCanvas(); 
+
+        function logOutput(message) {
+            outputText.textContent += `\n> ${message}`;
+            outputText.scrollTop = outputText.scrollHeight;
+        }
+
+        function renderPods() {
+            podListContainer.innerHTML = '';
+            pods.forEach(pod => {
+                const statusClass = {
+                    'Running': 'status-running',
+                    'Terminating': 'status-terminating',
+                    'Restored': 'status-restored'
+                }[pod.status];
+
+                const podElement = document.createElement('div');
+                podElement.classList.add('flex', 'items-center', 'space-x-2', 'bg-gray-800', 'p-2', 'rounded-lg');
+                
+                const timeSinceCreationSeconds = Math.floor((Date.now() - pod.creationTime) / 1000);
+                let timeDisplay;
+                if (timeSinceCreationSeconds < 60) {
+                    timeDisplay = `${timeSinceCreationSeconds}s ago`;
+                } else {
+                    const minutes = Math.floor(timeSinceCreationSeconds / 60);
+                    const seconds = timeSinceCreationSeconds % 60;
+                    timeDisplay = `${minutes}m ${seconds}s ago`;
+                }
+
+                podElement.innerHTML = `
+                    <span class="font-mono text-sm">${pod.name} (v${pod.version})</span>
+                    <span class="status-badge ${statusClass}">${pod.status}</span>
+                    <span class="ml-auto text-xs text-gray-400">${timeDisplay}</span>
+                `;
+                podListContainer.appendChild(podElement);
+            });
+        }
+        
+        setInterval(renderPods, 100);
+        
+        function animateDashboard() {
+            ctx.clearRect(0, 0, dashboardCanvas.width, dashboardCanvas.height);
+            
+            // Draw the single Node
+            ctx.fillStyle = '#2d2d2d';
+            ctx.fillRect(node.x, node.y, node.width, node.height);
+
+            const podRadius = 25;
+            const podSpacing = 20;
+
+            const numCols = Math.floor(node.width / (podRadius * 2 + podSpacing));
+            const numRows = Math.floor(node.height / (podRadius * 2 + podSpacing));
+            
+            const startX = node.x + (node.width - (numCols * (podRadius * 2 + podSpacing))) / 2 + podSpacing / 2;
+            const startY = node.y + (node.height - (numRows * (podRadius * 2 + podSpacing))) / 2 + podSpacing / 2;
+
+            const runningPods = pods.filter(p => p.status === 'Running');
+            const loadShare = runningPods.length > 0 ? (100 / runningPods.length) : 0;
+
+            pods.forEach((pod, index) => {
+                let color;
+                let scale = 1;
+                let isFilling = false;
+                let fillPercentage = 0;
+
+                if (pod.status === 'Running') {
+                    color = '#2d2d2d';
+                    isFilling = true;
+                    fillPercentage = loadShare;
+                    scale = 1;
+                } else if (pod.status === 'Terminating') {
+                    color = '#b91c1c';
+                    const progress = Math.min(1, (Date.now() - pod.animationStartTime) / 3000);
+                    scale = 1 - progress;
+                } else if (pod.status === 'Restored') {
+                    color = '#1e40af';
+                    const progress = Math.min(1, (Date.now() - pod.animationStartTime) / 4000);
+                    scale = progress;
+                }
+                
+                const col = index % numCols;
+                const row = Math.floor(index / numCols);
+
+                const podPositionX = startX + col * (podRadius * 2 + podSpacing) + podRadius;
+                const podPositionY = startY + row * (podRadius * 2 + podSpacing) + podRadius;
+                
+                pod.x = podPositionX;
+                pod.y = podPositionY;
+
+
+                ctx.save();
+                ctx.translate(pod.x, pod.y);
+                ctx.scale(scale, scale);
+
+                // Draw base circle
+                ctx.beginPath();
+                ctx.arc(0, 0, podRadius, 0, 2 * Math.PI);
+                ctx.fillStyle = color;
+                ctx.fill();
+
+                if (isFilling) {
+                    const startAngle = -0.5 * Math.PI; // Start at the top
+                    const endAngle = startAngle + (fillPercentage / 100) * 2 * Math.PI;
+                    ctx.beginPath();
+                    ctx.moveTo(0, 0);
+                    ctx.arc(0, 0, podRadius, startAngle, endAngle);
+                    ctx.closePath();
+                    ctx.fillStyle = '#0d9488';
+                    ctx.fill();
+                }
+                
+                ctx.fillStyle = 'white';
+                ctx.font = '16px Inter';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                // WICHTIG: Vermeidung von 'pod-deployment-' für eine bessere Anzeige.
+                const podNumber = index + 1; 
+                ctx.fillText(podNumber.toString(), 0, 0);
+
+                ctx.restore();
+            });
+
+            requestAnimationFrame(animateDashboard);
+        }
+        animateDashboard();
+
+        // The core "controller" logic (Reconciliation Loop)
+        function reconcilePods() {
+            const managedPods = pods.filter(p => p.controllerManaged);
+            const numManagedPods = managedPods.length;
+
+            if (rollingUpdateInProgress) {
+                const oldPods = managedPods.filter(p => p.version < deploymentVersion);
+                if (oldPods.length > 0) {
+                    const transitioningPod = managedPods.find(p => p.status === 'Terminating' || p.status === 'Restored');
+                    if (!transitioningPod) {
+                         // Find the oldest pod to update first
+                        const podToUpdate = oldPods.sort((a,b) => a.id - b.id)[0];
+                        podToUpdate.status = 'Terminating';
+                        podToUpdate.animationStartTime = Date.now();
+                        logOutput(`Starte Rolling Update von Pod "${podToUpdate.name}" (v${podToUpdate.version})...`);
+                        setTimeout(() => {
+                            const newPod = {
+                                id: ++podCounter,
+                                name: `pod-deployment-${podCounter}`,
+                                status: 'Restored',
+                                controllerManaged: true,
+                                creationTime: Date.now(),
+                                animationStartTime: Date.now(),
+                                version: deploymentVersion,
+                                nodeId: node.id,
+                                x: 0,
+                                y: 0
+                            };
+                            const index = pods.findIndex(p => p.id === podToUpdate.id);
+                            if (index !== -1) {
+                                pods.splice(index, 1, newPod);
+                            }
+                            logOutput(`Neuer Pod "${newPod.name}" (v${newPod.version}) wurde erstellt.`);
+                            setTimeout(() => { newPod.status = 'Running'; }, 4000);
+                        }, 3000);
+                    }
+                } else {
+                    rollingUpdateInProgress = false;
+                    logOutput(`Rolling Update abgeschlossen. Alle Pods sind auf Version ${deploymentVersion}.`);
+                }
+            } else { // Normal scaling reconciliation
+                if (numManagedPods < desiredReplicas) {
+                    const podsToAdd = desiredReplicas - numManagedPods;
+                    for (let i = 0; i < podsToAdd; i++) {
+                        podCounter++;
+                        const newPod = {
+                            id: podCounter,
+                            name: `pod-deployment-${podCounter}`,
+                            status: 'Restored',
+                            controllerManaged: true,
+                            creationTime: Date.now(),
+                            animationStartTime: Date.now(),
+                            version: deploymentVersion,
+                            nodeId: node.id,
+                            x: 0,
+                            y: 0
+                        };
+                        pods.push(newPod);
+                        logOutput(`Pod "${newPod.name}" erstellt (Reconciliation).`);
+                        setTimeout(() => { newPod.status = 'Running'; }, 4000);
+                    }
+                } else if (numManagedPods > desiredReplicas) {
+                    const podsToRemove = numManagedPods - desiredReplicas;
+                    for (let i = 0; i < podsToRemove; i++) {
+                        const podToRemove = managedPods[i];
+                        logOutput(`Pod "${podToRemove.name}" wird gelöscht (Reconciliation).`);
+                        
+                        podToRemove.status = 'Terminating';
+                        podToRemove.animationStartTime = Date.now();
+                        
+                        const index = pods.findIndex(p => p.id === podToRemove.id);
+                        if (index !== -1) {
+                            setTimeout(() => {
+                                const indexAfterDelay = pods.findIndex(p => p.id === podToRemove.id);
+                                if (indexAfterDelay !== -1) {
+                                    pods.splice(indexAfterDelay, 1);
+                                }
+                            }, 3000);
+                        }
+                    }
+                }
+            }
+        }
+
+        function deletePod(podName) {
+            const podIndex = pods.findIndex(p => p.name === podName);
+            if (podIndex === -1) {
+                logOutput(`Fehler: Pod "${podName}" nicht gefunden.`);
+                return;
+            }
+            const podToDelete = pods[podIndex];
+            logOutput(`Simuliere Löschung von Pod "${podToDelete.name}"...`);
+            
+            podToDelete.status = 'Terminating';
+            podToDelete.animationStartTime = Date.now();
+            
+            setTimeout(() => {
+                const indexAfterDelay = pods.findIndex(p => p.id === podToDelete.id);
+                if (indexAfterDelay !== -1) {
+                    pods.splice(indexAfterDelay, 1);
+                    logOutput(`Pod "${podToDelete.name}" wurde vom Controller gelöscht.`);
+                }
+            }, 5000);
+        }
+        
+        // Funktion zur Initialisierung des Clusters (nur beim ersten kubectl get pods)
+        function initializeCluster() {
+            if (!isInitialized) {
+                // Initialisiere die Pods basierend auf desiredReplicas (hier 2)
+                reconcilePods();
+                // Starte den Reconciliation Loop (alle 2 Sekunden)
+                setInterval(reconcilePods, 2000);
+                isInitialized = true;
+                logOutput("Kubernetes Control Plane initialisiert.");
+            }
+        }
+
+
+        // Initial setup for the simulator
+        logOutput("Willkommen beim Kubernetes Simulator!");
+        logOutput("Geben Sie 'kubectl get pods' ein, um zu beginnen.");
+        
+        // Handle user input
+        kubectlInput.addEventListener('keyup', (e) => {
+            if (e.key === 'Enter') {
+                const command = kubectlInput.value.trim();
+                kubectlInput.value = '';
+                logOutput(`$ ${command}`);
+
+                if (command === 'kubectl get pods') {
+                    if (!isInitialized) {
+                        // FIX: Initialisierung erfolgt hier, wie gewünscht:
+                        initializeCluster();
+                    }
+                    
+                    if (pods.length === 0) {
+                        logOutput("Keine Pods gefunden.");
+                    } else {
+                        logOutput("NAME                         STATUS");
+                        pods.forEach(p => logOutput(`${p.name.padEnd(28)}${p.status}`));
+                    }
+                } else if (command.startsWith('kubectl delete pod')) {
+                    const parts = command.split(' ');
+                    if (parts.length === 4) {
+                        deletePod(parts[3]);
+                    } else {
+                        logOutput("Fehler: Ungültiger Befehl. Beispiel: 'kubectl delete pod <name>'");
+                    }
+                } else if (command.startsWith('kubectl scale deployment')) {
+                    const parts = command.split(' ');
+                    const replicasPart = parts.find(p => p.startsWith('--replicas='));
+                    if (replicasPart) {
+                        const count = parseInt(replicasPart.split('=')[1]);
+                        if (!isNaN(count) && count >= 0 && count <= maxPods) {
+                            desiredReplicas = count;
+                            logOutput(`Skaliere Deployment auf ${desiredReplicas} Replikas.`);
+                            if (!isInitialized) {
+                                logOutput("Cluster ist noch nicht initialisiert. Bitte 'kubectl get pods' eingeben.");
+                            }
+                        } else {
+                            logOutput("Fehler: Ungültige Anzahl für Replicas. Der Wert muss eine Zahl zwischen 0 und 10 sein.");
+                        }
+                    } else {
+                        logOutput("Fehler: Ungültiger Befehl. Beispiel: 'kubectl scale deployment --replicas=3'");
+                    }
+                } else if (command === 'kubectl rollout restart') {
+                    if (pods.length > 0 && !rollingUpdateInProgress) {
+                        deploymentVersion++;
+                        rollingUpdateInProgress = true;
+                        logOutput(`Starte Rolling Update für Version ${deploymentVersion}.`);
+                    } else if (rollingUpdateInProgress) {
+                        logOutput("Fehler: Ein Rolling Update ist bereits im Gange.");
+                    } else {
+                        logOutput("Es gibt keine Pods, um ein Rolling Update zu starten. Bitte 'kubectl get pods' eingeben.");
+                    }
+                } else {
+                    logOutput("Unbekannter Befehl.");
+                }
+            }
+        });
+
+        // --- Quiz Logic ---
+        const quizContent = document.getElementById('quiz-content');
+        const startQuizButton = document.getElementById('start-quiz-button');
+        const quizQuestions = [
+            {
+                question: "Was ist ein Pod?",
+                options: [
+                    "Ein einzelner Container",
+                    "Eine Gruppe von Containern, die zusammengehören",
+                    "Eine Art von Deployment",
+                    "Ein Server im Cluster"
+                ],
+                answer: "Eine Gruppe von Containern, die zusammengehören",
+                explanation: "Ein **Pod** ist die kleinste Einheit, die Sie in Kubernetes erstellen und verwalten können. Er enthält eine oder mehrere Anwendungen, die in Containern laufen und sich Ressourcen wie Netzwerk und Speicher teilen."
+            },
+            {
+                question: "Was macht ein Deployment?",
+                options: [
+                    "Es erstellt ein Netzwerk",
+                    "Es speichert Daten",
+                    "Es verwaltet die Anzahl Ihrer Pods",
+                    "Es überwacht den Cluster"
+                ],
+                answer: "Es verwaltet die Anzahl Ihrer Pods",
+                explanation: "Ein **Deployment** stellt sicher, dass immer die gewünschte Anzahl (Replicas) Ihrer Pods im Cluster läuft. Wenn ein Pod ausfällt, erstellt es automatisch einen neuen."
+            },
+            {
+                question: "Was ist ein Node in Kubernetes?",
+                options: [
+                    "Eine logische Gruppe von Pods",
+                    "Ein physischer oder virtueller Server",
+                    "Ein Netzwerk-Controller",
+                    "Eine Konfigurationsdatei"
+                ],
+                answer: "Ein physischer oder virtueller Server",
+                explanation: "Ein **Node** ist eine physische oder virtuelle Maschine, die als 'Worker-Maschine' fungiert und Pods ausführt. Ein Kubernetes-Cluster besteht aus mehreren Nodes."
+            },
+            {
+                question: "Wozu dient ein Service?",
+                options: [
+                    "Zum Speichern von geheimen Daten",
+                    "Um Pods mit dem Internet zu verbinden",
+                    "Zum Verwalten des Dateisystems",
+                    "Als Weg, um Pods zu erreichen"
+                ],
+                answer: "Als Weg, um Pods zu erreichen",
+                explanation: "Ein **Service** ist ein statischer Endpunkt (mit einer festen IP-Adresse), der den Zugriff auf eine dynamische Gruppe von Pods ermöglicht. Er leitet Anfragen an die Pods weiter, auch wenn diese neu erstellt oder gelöscht werden."
+            },
+            {
+                question: "Was ist der Hauptzweck eines Namespaces?",
+                options: [
+                    "Um Pods zu stoppen",
+                    "Um Cluster-Ressourcen zu organisieren und zu isolieren",
+                    "Um die Kommunikation zu überwachen",
+                    "Um die Pod-Skalierung zu steuern"
+                ],
+                answer: "Um Cluster-Ressourcen zu organisieren und zu isolieren",
+                explanation: "Ein **Namespace** hilft dabei, Ressourcen in einem Cluster zu organisieren. Er trennt verschiedene Anwendungen oder Teams logisch voneinander, was die Verwaltung und Sicherheit verbessert."
+            },
+            {
+                question: "Was ist eine ConfigMap?",
+                options: [
+                    "Eine Karte des Netzwerks",
+                    "Ein Tool zur Container-Sicherheit",
+                    "Eine Möglichkeit, nicht-geheime Konfigurationsdaten zu speichern",
+                    "Ein Pod-Status-Report"
+                ],
+                answer: "Eine Möglichkeit, nicht-geheime Konfigurationsdaten zu speichern",
+                explanation: "Eine **ConfigMap** dient dazu, Konfigurationsdaten in Schlüssel-Wert-Paaren zu speichern. Diese Daten können dann von Pods genutzt werden, um ihre Einstellungen dynamisch zu ändern, ohne den Container-Image-Code anpassen zu müssen."
+            },
+            {
+                question: "Welche Komponente führt Container auf einem Node aus?",
+                options: [
+                    "Der Controller Manager",
+                    "Der Scheduler",
+                    "kubelet",
+                    "Der API Server"
+                ],
+                answer: "kubelet",
+                explanation: "Das **kubelet** ist ein Agent, der auf jedem Node im Cluster läuft. Seine Aufgabe ist es, mit der Control Plane zu kommunizieren und sicherzustellen, dass die Container, die in den Pods laufen sollen, auch wirklich laufen."
+            },
+            {
+                question: "Welche Befehlszeile wird zur Interaktion mit Kubernetes verwendet?",
+                options: [
+                    "npm",
+                    "docker run",
+                    "git push",
+                    "kubectl"
+                ],
+                answer: "kubectl",
+                explanation: "Das **kubectl**-Befehlszeilentool ist das Hauptwerkzeug für Administratoren und Entwickler, um Befehle an einen Kubernetes-Cluster zu senden und dessen Zustand zu verwalten."
+            }
+        ];
+        let currentQuestionIndex = 0;
+        let score = 0;
+        const quizResults = [];
+
+        startQuizButton.addEventListener('click', () => {
+            startQuizButton.classList.add('hidden');
+            quizContent.classList.remove('hidden');
+            currentQuestionIndex = 0;
+            score = 0;
+            quizResults.length = 0; // Clear previous results
+            displayQuestion();
+        });
+
+        function displayQuestion() {
+            if (currentQuestionIndex >= quizQuestions.length) {
+                showQuizResult();
+                return;
+            }
+
+            const questionData = quizQuestions[currentQuestionIndex];
+            quizContent.innerHTML = `
+                <div class="mb-6">
+                    <p class="text-gray-400 text-sm mb-2">Frage ${currentQuestionIndex + 1} von ${quizQuestions.length}</p>
+                    <p class="text-xl font-semibold mb-4">${questionData.question}</p>
+                    <div id="options-container" class="space-y-4">
+                        ${questionData.options.map(option => `
+                            <button class="w-full text-left p-4 rounded-xl border border-gray-700 bg-gray-800 text-gray-200 hover:bg-gray-700 transition-colors option-button" data-answer="${option}">
+                                ${option}
+                            </button>
+                        `).join('')}
+                    </div>
+                    <div id="explanation-container" class="mt-4 p-4 rounded-xl bg-gray-800 hidden"></div>
+                </div>
+            `;
+            document.querySelectorAll('.option-button').forEach(button => {
+                button.addEventListener('click', checkAnswer);
+            });
+        }
+
+        function checkAnswer(e) {
+            const selectedAnswer = e.target.dataset.answer;
+            const questionData = quizQuestions[currentQuestionIndex];
+            const correctAnswer = questionData.answer;
+            const explanationContainer = document.getElementById('explanation-container');
+            
+            // Disable buttons after selection
+            document.querySelectorAll('.option-button').forEach(button => {
+                button.disabled = true;
+            });
+
+            const isCorrect = selectedAnswer === correctAnswer;
+            if (isCorrect) {
+                e.target.classList.add('bg-green-700', 'border-green-500', 'text-white');
+                score++;
+                explanationContainer.innerHTML = `<p class="font-bold text-green-400">Richtig!</p><p class="text-gray-300 mt-1">${questionData.explanation}</p>`;
+            } else {
+                e.target.classList.add('bg-red-700', 'border-red-500', 'text-white');
+                // Highlight correct answer
+                document.querySelector(`[data-answer="${correctAnswer}"]`).classList.add('bg-green-700', 'border-green-500', 'text-white');
+                explanationContainer.innerHTML = `<p class="font-bold text-red-400">Falsch.</p><p class="text-gray-300 mt-1">${questionData.explanation}</p>`;
+            }
+            
+            quizResults.push({
+                question: questionData.question,
+                userAnswer: selectedAnswer,
+                correctAnswer: correctAnswer,
+                isCorrect: isCorrect,
+                explanation: questionData.explanation
+            });
+
+            explanationContainer.classList.remove('hidden');
+
+            const nextButton = document.createElement('button');
+            nextButton.textContent = (currentQuestionIndex === quizQuestions.length - 1) ? 'Ergebnisse anzeigen' : 'Weiter';
+            nextButton.className = 'mt-4 px-6 py-3 bg-blue-600 text-white font-semibold rounded-full hover:bg-blue-700 transition-colors';
+            nextButton.addEventListener('click', () => {
+                currentQuestionIndex++;
+                displayQuestion();
+            });
+            explanationContainer.appendChild(nextButton);
+        }
+
+        function showQuizResult() {
+            let resultHtml = `
+                <div class="text-center">
+                    <h3 class="text-2xl font-bold mb-4">Quiz beendet!</h3>
+                    <p class="text-xl mb-4">Ihre Punktzahl: <span class="text-blue-500 font-bold">${score} von ${quizQuestions.length}</span></p>
+                    <p class="text-lg text-gray-400">${score > quizQuestions.length / 2 ? 'Gut gemacht!' : 'Üben Sie weiter, Sie schaffen das!'}</p>
+                </div>
+                <hr class="my-6 border-gray-700">
+                <div class="space-y-6">
+                    <h4 class="text-2xl font-bold">Detaillierte Auswertung:</h4>
+            `;
+
+            quizResults.forEach((result, index) => {
+                const statusColor = result.isCorrect ? 'text-green-500' : 'text-red-500';
+                const statusText = result.isCorrect ? 'Richtig' : 'Falsch';
+                resultHtml += `
+                    <div class="p-4 rounded-lg bg-gray-800 border border-gray-700">
+                        <p class="font-bold text-lg mb-2">Frage ${index + 1}: ${result.question}</p>
+                        <p class="${statusColor}">Ihre Antwort: ${result.userAnswer} <span class="font-bold">(${statusText})</span></p>
+                        <p class="text-gray-400">Richtige Antwort: ${result.correctAnswer}</p>
+                        <p class="text-gray-500 mt-2">${result.explanation}</p>
+                    </div>
+                `;
+            });
+
+            resultHtml += `
+                </div>
+                <div class="text-center mt-6">
+                    <button onclick="window.location.reload();" class="px-6 py-3 bg-blue-600 text-white font-semibold rounded-full hover:bg-blue-700 transition-colors">Nochmal versuchen</button>
+                </div>
+            `;
+            quizContent.innerHTML = resultHtml;
+        }
+
+        // --- Knowledge Base Logic ---
+        const lexikonContent = document.getElementById('lexikon-content');
+        const lexikonSearch = document.getElementById('lexikon-search');
+
+        const lexikonData = [
+            {
+                term: "Kubernetes",
+                definition: "Ein portables, erweiterbares Open-Source-System zur Verwaltung von containerisierten Workloads und Services. Es automatisiert die Bereitstellung, Skalierung und Verwaltung von Anwendungen in Containern. Ursprünglich von Google entwickelt, wird es heute von der Cloud Native Computing Foundation (CNCF) als eines der wichtigsten Open-Source-Projekte gepflegt."
+            },
+            {
+                term: "Pod",
+                definition: "Der Pod ist die kleinste, deployable Einheit in Kubernetes. Ein Pod repräsentiert eine Gruppe von einem oder mehreren Containern, die eine gemeinsame logische Einheit bilden. Alle Container in einem Pod teilen sich dieselben Ressourcen, wie z.B. das Netzwerk und den Speicher, und werden als eine einzige Anwendung verwaltet. Dies ist ideal für eng gekoppelte Container, die zusammenarbeiten müssen.",
+                codeExample: `
+apiVersion: v1
+kind: Pod
+metadata:
+  name: my-first-pod
+spec:
+  containers:
+  - name: web-container
+    image: nginx
+`
+            },
+            {
+                term: "Deployment",
+                definition: "Ein Deployment ist ein API-Objekt, das die deklarative Verwaltung von Pods und ReplicaSets steuert. Der Hauptzweck eines Deployments ist es, sicherzustellen, dass eine gewünschte Anzahl von Pod-Replicas zu jeder Zeit läuft. Es erleichtert Rollouts (neue Versionen der Anwendung veröffentlichen), Rollbacks (zurück zur vorherigen Version) und das automatische Skalieren.",
+                codeExample: `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: my-web-app
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: web-app
+  template:
+    metadata:
+      labels:
+        app: web-app
+    spec:
+      containers:
+      - name: web-container
+        image: nginx
+`
+            },
+            {
+                term: "Service",
+                definition: "Ein Service ist eine abstrakte Möglichkeit, eine Gruppe von Pods, die denselben Dienst ausführen, zu exponieren. Er dient als eine Art Lastverteiler. Ein Service hat eine feste IP-Adresse und einen DNS-Namen, über die andere Pods oder externe Systeme auf die Anwendung zugreifen können, ohne die einzelnen Pods direkt adressieren zu müssen. Dies ist entscheidend, da Pods dynamisch sind und ihre IP-Adressen sich ändern können.",
+                codeExample: `
+apiVersion: v1
+kind: Service
+metadata:
+  name: my-web-service
+spec:
+  selector:
+    app: web-app
+  ports:
+  - protocol: TCP
+    port: 80
+    targetPort: 80
+`
+            },
+            {
+                term: "Namespace",
+                definition: "Ein Namespace bietet eine Möglichkeit, Ressourcen innerhalb eines Kubernetes-Clusters in logische, voneinander isolierte Gruppen zu partitionieren. Namespaces sind ideal, um Teams, Umgebungen (z. B. Entwicklung, Test, Produktion) oder verschiedene Anwendungen voneinander zu trennen und die Verwaltung zu vereinfachen, ohne separate Cluster zu benötigen."
+            },
+            {
+                term: "ReplicaSet",
+                definition: "Ein ReplicaSet stellt sicher, dass zu jedem Zeitpunkt eine bestimmte, deklarativ festgelegte Anzahl von Pod-Replicas läuft. Wenn ein Pod ausfällt oder gelöscht wird, erstellt das ReplicaSet automatisch einen neuen, um die gewünschte Anzahl beizubehalten. Normalerweise wird ein ReplicaSet nicht direkt verwendet, sondern über ein Deployment, das seine Funktionalität steuert."
+            },
+            {
+                term: "Node",
+                definition: "Ein Node ist eine physische oder virtuelle Maschine, die als Worker-Maschine in einem Kubernetes-Cluster fungiert. Nodes hosten die Pods und verfügen über Komponenten wie den Container-Laufzeitumgebung (z.B. Docker), kubelet und kube-proxy, um mit der Control Plane zu kommunizieren und Pods auszuführen."
+            },
+            {
+                term: "Control Plane",
+                definition: "Die Control Plane ist das Gehirn des Kubernetes-Clusters. Sie verwaltet den Zustand des Clusters und trifft Entscheidungen, wie die Planung von Pods auf den Nodes, die Skalierung und die Aktualisierungen. Sie besteht aus mehreren Komponenten, darunter der API Server, der Scheduler und der Controller Manager."
+            },
+            {
+                term: "Best Practices: Namespaces nutzen",
+                definition: "Verwenden Sie Namespaces, um Ihre Cluster-Ressourcen zu organisieren und zu isolieren. Das schafft eine saubere Trennung zwischen verschiedenen Anwendungen oder Teams und vereinfacht die Rechteverwaltung (RBAC)."
+            },
+            {
+                term: "Best Practices: Ressourcenlimits festlegen",
+                definition: "Definieren Sie immer CPU- und Speicheranforderungen und -limits für Ihre Pods. Dies stellt sicher, dass Ihre Pods die Ressourcen erhalten, die sie benötigen, und verhindert, dass einzelne Pods zu viele Ressourcen verbrauchen und die Stabilität des Clusters beeinträchtigt."
+            },
+            {
+                term: "Best Practices: Deklarativ arbeiten",
+                definition: "Nutzen Sie YAML-Dateien, um Ihre Kubernetes-Ressourcen deklarativ zu definieren. Anstatt dem Cluster zu sagen, wie er etwas tun soll (imperativ), sagen Sie ihm, wie der gewünschte Endzustand aussehen soll. Kubernetes sorgt dann automatisch dafür, dass dieser Zustand erreicht wird."
+            }
+        ];
+
+        function renderLexikonSummary() {
+            lexikonSummary.innerHTML = `
+                <p class="text-lg font-semibold text-gray-200 mb-2">Was ist Kubernetes?</p>
+                <p class="text-gray-300">
+                    Willkommen im Kubernetes-Lexikon! Kubernetes, auch K8s genannt, ist ein Open-Source-System, das ursprünglich von Google entwickelt wurde und heute von der Cloud Native Computing Foundation (CNCF) betreut wird. Seine Hauptaufgabe ist die **Orchestrierung von Containern**.  Das bedeutet, es automatisiert die Bereitstellung, Skalierung und Verwaltung Ihrer Anwendungen, die in Containern laufen.
+                </p>
+                <p class="text-gray-300 mt-2">
+                    Stellen Sie sich vor, Sie haben viele kleine, isolierte Bausteine (Ihre Anwendungen in Containern) und möchten eine große, stabile Struktur (Ihre gesamte Anwendung) bauen. Kubernetes ist der "Bauleiter", der dafür sorgt, dass diese Bausteine automatisch an den richtigen Stellen platziert werden, bei Bedarf neue Bausteine hinzugefügt oder alte ersetzt werden. So stellt es sicher, dass Ihre Anwendung immer verfügbar und effizient ist.
+                </p>
+                <p class="text-gray-300 mt-2">
+                    Die Architektur von Kubernetes basiert auf zwei Hauptkomponenten: einer zentralen **Control Plane** und den **Worker Nodes**. Die Control Plane ist das Gehirn des Clusters. Sie trifft alle Entscheidungen und überwacht den Zustand. Die Worker Nodes sind die Arbeiter, die die eigentliche Last tragen und Ihre Pods ausführen.
+                </p>
+            `;
+        }
+
+        function renderLexikon(data) {
+            lexikonContent.innerHTML = '';
+            if (data.length === 0) {
+                lexikonContent.innerHTML = '<p class="text-center text-gray-500">Keine Begriffe gefunden.</p>';
+            }
+            data.forEach(entry => {
+                const entryElement = document.createElement('div');
+                entryElement.classList.add('bg-gray-800', 'p-6', 'rounded-xl');
+                let codeHtml = '';
+                if (entry.codeExample) {
+                    codeHtml = `<pre class="code-block">${entry.codeExample.trim()}</pre>`;
+                }
+                entryElement.innerHTML = `
+                    <h3 class="text-xl font-bold text-gray-100 mb-2">${entry.term}</h3>
+                    <p class="text-gray-300">${entry.definition}</p>
+                    ${codeHtml}
+                `;
+                lexikonContent.appendChild(entryElement);
+            });
+        }
+
+        lexikonSearch.addEventListener('input', (e) => {
+            const searchTerm = e.target.value.toLowerCase();
+            const filteredData = lexikonData.filter(entry => 
+                entry.term.toLowerCase().includes(searchTerm) || 
+                entry.definition.toLowerCase().includes(searchTerm)
+            );
+            renderLexikon(filteredData);
+        });
+
+        // Initial rendering of knowledge base
+        renderLexikon(lexikonData);
+        renderLexikonSummary();
+
+    </script>
+</body>
+</html>
