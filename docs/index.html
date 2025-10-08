@@ -164,6 +164,10 @@
             padding-left: 2rem;
             margin-bottom: 1rem;
         }
+        .anleitung-comment {
+            color: #8c8c8c; /* Dunklerer Text für Kommentare */
+            font-style: italic;
+        }
     </style>
 </head>
 <body class="p-8">
@@ -324,28 +328,39 @@
                 <p>Wir verwenden <code>nano</code> zum Erstellen der Datei. Denke daran: Nach dem Einfügen speicherst du mit <code>STRG + O</code>, bestätigst mit <code>Enter</code> und schließt mit <code>STRG + X</code>.</p>
                 <h3>Datei erstellen: <code>webserver-app.yaml</code></h3>
                 <p><code>nano webserver-app.yaml</code></p>
-                <h3>Inhalt von <code>webserver-app.yaml</code>:</h3>
-                <pre># Die folgenden Zeilen definieren die Regeln für unseren Webserver:
+                <h3>Inhalt von <code>webserver-app.yaml</code> (mit Zeilen-Kommentaren):</h3>
+                <pre># Die folgenden Zeilen definieren die Regeln für unser Deployment:
+<span class="anleitung-comment"># Die API-Version für Deployment-Objekte.</span>
 apiVersion: apps/v1
+<span class="anleitung-comment"># Der Typ des Kubernetes-Objekts, das wir erstellen: ein Deployment.</span>
 kind: Deployment
 metadata:
+<span class="anleitung-comment">  # Der Name des Deployments, unter dem es verwaltet wird.</span>
   name: einfacher-webserver
-  labels:                  
+  labels:                  
+<span class="anleitung-comment">    # Ein Label (Schlagwort), das zur Identifizierung dient.</span>
     app: meine-seite
 spec:
-  replicas: 2              
+<span class="anleitung-comment">  # Gewünschte Anzahl von Pods (Container-Kopien) die laufen sollen.</span>
+  replicas: 2              
   selector:
     matchLabels:
-      app: meine-seite     
-  template:                
+<span class="anleitung-comment">      # Definiert, welche Pods zu diesem Deployment gehören (muss mit dem Pod-Label übereinstimmen).</span>
+      app: meine-seite     
+  template:                
+<span class="anleitung-comment">    # Die Vorlage für die Pods, die dieses Deployment erzeugt.</span>
     metadata:
       labels:
-        app: meine-seite   
+<span class="anleitung-comment">        # Das Label für die Pods, damit der Selector sie findet.</span>
+        app: meine-seite   
     spec:
-      containers:          
+      containers:          
+<span class="anleitung-comment">        # Startet die Definition der Container, die im Pod laufen.</span>
       - name: nginx-container
+<span class="anleitung-comment">        # Das zu verwendende Container-Image (hier: der offizielle Nginx-Webserver).</span>
         image: nginx:latest
         ports:
+<span class="anleitung-comment">          # Der Port, den der Container intern exponiert (Nginx läuft auf Port 80).</span>
         - containerPort: 80</pre>
                 
                 <hr class="my-6 border-gray-700">
@@ -354,19 +369,27 @@ spec:
                 <p>Dieser Service macht die gestarteten Container für uns von außen erreichbar.</p>
                 <h3>Datei erstellen: <code>webserver-zugang.yaml</code></h3>
                 <p><code>nano webserver-zugang.yaml</code></p>
-                <h3>Inhalt von <code>webserver-zugang.yaml</code>:</h3>
+                <h3>Inhalt von <code>webserver-zugang.yaml</code> (mit Zeilen-Kommentaren):</h3>
                 <pre># Die folgenden Zeilen definieren den Service für den Zugang zu den Pods:
+<span class="anleitung-comment"># Die API-Version für Service-Objekte.</span>
 apiVersion: v1
+<span class="anleitung-comment"># Der Typ des Kubernetes-Objekts, das wir erstellen: ein Service.</span>
 kind: Service
 metadata:
+<span class="anleitung-comment">  # Der Name des Services.</span>
   name: webserver-service
 spec:
+<span class="anleitung-comment">  # Definiert, welche Pods hinter diesem Service liegen (muss mit dem Pod-Label übereinstimmen).</span>
   selector:
     app: meine-seite
   ports:
-    - protocol: TCP
-      port: 80
-      targetPort: 80
+<span class="anleitung-comment">    # Startet die Port-Definition.</span>
+  - protocol: TCP
+<span class="anleitung-comment">    # Der Port, den der Service anbietet (Zugriff von außen auf diesen Port).</span>
+    port: 80
+<span class="anleitung-comment">    # Der Port des Ziel-Containers, an den der Service weiterleiten soll.</span>
+    targetPort: 80
+<span class="anleitung-comment">  # Der Typ des Services: NodePort macht ihn über den Node erreichbar.</span>
   type: NodePort</pre>
 
                 <hr class="my-6 border-gray-700">
@@ -537,7 +560,7 @@ spec:
 
                 <h3>Kontakt</h3>
                 <p><strong>E-Mail:</strong> <a href="mailto:stephan.teege@gmx.de" class="text-blue-400 hover:underline">stephan.teege@gmx.de</a><br>
-                   <strong>Telefon:</strong> 017647191285</p>
+                    <strong>Telefon:</strong> 017647191285</p>
 
                 <h3>Verantwortlich für den Inhalt nach § 55 Abs. 2 RStV</h3>
                 <p>Stephan Teege<br>Buchholzgasse 24, 99425 Weimar</p>
@@ -550,8 +573,8 @@ spec:
 
                 <h3>1. Verantwortliche Stelle</h3>
                 <p>Verantwortlich für die Datenverarbeitung auf dieser Website ist:<br>
-                   <strong>Stephan Teege</strong><br>Buchholzgasse 24<br>99425 Weimar<br>
-                   E-Mail: stephan.teege@gmx.de</p>
+                    <strong>Stephan Teege</strong><br>Buchholzgasse 24<br>99425 Weimar<br>
+                    E-Mail: stephan.teege@gmx.de</p>
 
                 <h3>2. Grundsätze der Datenverarbeitung</h3>
                 <p>Diese Website ist ein nicht-kommerzielles, akademisches Projekt. Die gesamte Anwendungslogik (Simulator, Quiz-Auswertung) findet **lokal im Browser** des Nutzers statt. Wir speichern **keine personenbezogenen Daten** unserer Nutzer dauerhaft auf eigenen Systemen. Eine Verarbeitung erfolgt lediglich durch das Hosting und die Einbindung externer Dienste.</p>
@@ -839,30 +862,30 @@ spec:
                     const transitioningPod = managedPods.find(p => p.status === 'Terminating' || p.status === 'Restored');
                     if (!transitioningPod) {
                          // Find the oldest pod to update first
-                        const podToUpdate = oldPods.sort((a,b) => a.id - b.id)[0];
-                        podToUpdate.status = 'Terminating';
-                        podToUpdate.animationStartTime = Date.now();
-                        logOutput(`Starte Rolling Update von Pod "${podToUpdate.name}" (v${podToUpdate.version})...`);
-                        setTimeout(() => {
-                            const newPod = {
-                                id: ++podCounter,
-                                name: `pod-deployment-${podCounter}`,
-                                status: 'Restored',
-                                controllerManaged: true,
-                                creationTime: Date.now(),
-                                animationStartTime: Date.now(),
-                                version: deploymentVersion,
-                                nodeId: node.id,
-                                x: 0,
-                                y: 0
-                            };
-                            const index = pods.findIndex(p => p.id === podToUpdate.id);
-                            if (index !== -1) {
-                                pods.splice(index, 1, newPod);
-                            }
-                            logOutput(`Neuer Pod "${newPod.name}" (v${newPod.version}) wurde erstellt.`);
-                            setTimeout(() => { newPod.status = 'Running'; }, 4000);
-                        }, 3000);
+                       const podToUpdate = oldPods.sort((a,b) => a.id - b.id)[0];
+                       podToUpdate.status = 'Terminating';
+                       podToUpdate.animationStartTime = Date.now();
+                       logOutput(`Starte Rolling Update von Pod "${podToUpdate.name}" (v${podToUpdate.version})...`);
+                       setTimeout(() => {
+                           const newPod = {
+                               id: ++podCounter,
+                               name: `pod-deployment-${podCounter}`,
+                               status: 'Restored',
+                               controllerManaged: true,
+                               creationTime: Date.now(),
+                               animationStartTime: Date.now(),
+                               version: deploymentVersion,
+                               nodeId: node.id,
+                               x: 0,
+                               y: 0
+                           };
+                           const index = pods.findIndex(p => p.id === podToUpdate.id);
+                           if (index !== -1) {
+                               pods.splice(index, 1, newPod);
+                           }
+                           logOutput(`Neuer Pod "${newPod.name}" (v${newPod.version}) wurde erstellt.`);
+                           setTimeout(() => { newPod.status = 'Running'; }, 4000);
+                       }, 3000);
                     }
                 } else {
                     rollingUpdateInProgress = false;
@@ -966,7 +989,7 @@ spec:
                     if (pods.length === 0) {
                         logOutput("Keine Pods gefunden.");
                     } else {
-                        logOutput("NAME                         STATUS");
+                        logOutput("NAME                         STATUS");
                         pods.forEach(p => logOutput(`${p.name.padEnd(28)}${p.status}`));
                     }
                 } else if (command.startsWith('kubectl delete pod')) {
@@ -1315,7 +1338,7 @@ spec:
             lexikonSummary.innerHTML = `
                 <p class="text-lg font-semibold text-gray-200 mb-2">Was ist Kubernetes?</p>
                 <p class="text-gray-300">
-                    Willkommen im Kubernetes-Lexikon! Kubernetes, auch K8s genannt, ist ein Open-Source-System, das ursprünglich von Google entwickelt wurde und heute von der Cloud Native Computing Foundation (CNCF) betreut wird. Seine Hauptaufgabe ist die **Orchestrierung von Containern**.  Das bedeutet, es automatisiert die Bereitstellung, Skalierung und Verwaltung Ihrer Anwendungen, die in Containern laufen.
+                    Willkommen im Kubernetes-Lexikon! Kubernetes, auch K8s genannt, ist ein Open-Source-System, das ursprünglich von Google entwickelt wurde und heute von der Cloud Native Computing Foundation (CNCF) betreut wird. Seine Hauptaufgabe ist die **Orchestrierung von Containern**.  Das bedeutet, es automatisiert die Bereitstellung, Skalierung und Verwaltung Ihrer Anwendungen, die in Containern laufen.
                 </p>
                 <p class="text-gray-300 mt-2">
                     Stellen Sie sich vor, Sie haben viele kleine, isolierte Bausteine (Ihre Anwendungen in Containern) und möchten eine große, stabile Struktur (Ihre gesamte Anwendung) bauen. Kubernetes ist der "Bauleiter", der dafür sorgt, dass diese Bausteine automatisch an den richtigen Stellen platziert werden, bei Bedarf neue Bausteine hinzugefügt oder alte ersetzt werden. So stellt es sicher, dass Ihre Anwendung immer verfügbar und effizient ist.
