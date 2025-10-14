@@ -174,7 +174,7 @@
     <div class="container mx-auto">
         <header class="text-center mb-4">
             <h1 class="text-5xl font-extrabold text-gray-100 mb-2">Kubernetes Lern-App</h1>
-            <p class="text-xl text-gray-400">Lernen Sie Kubernetes mit Simulation, Quiz und Lexikon.</p>
+            <p class="text-xl text-gray-400">Lerne Kubernetes mit Simulation, Quiz und Lexikon.</p>
         </header>
 
         <nav class="flex justify-center space-x-4 mb-8">
@@ -193,7 +193,8 @@
                     <h2 class="text-3xl font-bold text-gray-100 mb-4">Willkommen bei der Kubernetes Lern-App</h2>
                     <p class="text-lg text-gray-400 max-w-2xl">
                         Diese interaktive Anwendung hilft dir, die Kernkonzepte von Kubernetes auf spielerische Weise kennenzulernen und zu vertiefen.
-                        Nutze den Simulator, um Pods zu erstellen und zu verwalten, teste dein Wissen im Quiz und finde wichtige Begriffe im Wissenslexikon.
+                        Nutze den Simulator, um Pods zu erstellen und zu verwalten, teste dein Wissen im Quiz und finde wichtige Begriffe im Wissenslexikon
+                        oder nutze die Anleitung und erstelle ein eigenes kleines Minikube-Cluster.
                     </p>
                 </div>
             </section>
@@ -246,7 +247,7 @@
                 <div id="lexikon-content" class="space-y-6">
                     </div>
                 <div class="mt-8 text-center text-gray-400">
-                    <p>Weitere Informationen finden Sie in der offiziellen Dokumentation:</p>
+                    <p>Weitere Informationen findet ihr in der offiziellen Dokumentation:</p>
                     <a href="https://kubernetes.io/docs" target="_blank" class="text-blue-500 hover:underline">kubernetes.io/docs</a>
                 </div>
             </section>
@@ -545,7 +546,7 @@ spec:
                         <li><a href="https://kubernetes.io/blog/" target="_blank" class="text-blue-500 hover:underline"><strong>Kubernetes-Blog:</strong></a> Neuigkeiten, Ankündigungen und Artikel der Kubernetes-Community.</li>
                         <li><a href="https://github.com/cncf/" target="_blank" class="text-blue-500 hover:underline"><strong>CNCF GitHub-Repository:</strong></a> Einsicht in die Entwicklung und Codebasis der Cloud-native-Projekte.</li>
                         <li><a href="https://github.com/kubernetes/" target="_blank" class="text-blue-500 hover:underline"><strong>Kubernetes GitHub:</strong></a> Der offizielle Code des Kubernetes-Projekts.</li>
-                        <li>Buch: "Kubernetes: Up and Running":</strong></a> Ein Standardwerk zur Einführung in die Kubernetes-Praxis.</li>
+                        <li>"Kubernetes: Eine kompakte Einführung" </strong></a>Brendan Burns / Joe Beda / Kelsey Hightower / Lachlan Evenson, 3. Auflage, 2023, dpunkt.verlag.</li>
                     </ul>
                 </div>
             </section>
@@ -618,7 +619,7 @@ spec:
         </main>
 
         <footer class="mx-auto text-center mt-8 p-4 text-sm text-gray-500">
-            <p>Erstellt von: Stephan Teege | Kurs: VI23 | Version: 1.9.2 (Stand: 06.10.2025)</p>
+            <p>Erstellt von: Stephan Teege | Kurs: VI23 | Version: 1.9.3 (Stand: 14.10.2025)</p>
             <p class="mt-1">
                 <button id="nav-impressum" class="text-blue-500 hover:underline">Impressum & Datenschutz</button>
             </p>
@@ -766,89 +767,90 @@ spec:
         setInterval(renderPods, 100);
         
         function animateDashboard() {
-            ctx.clearRect(0, 0, dashboardCanvas.width, dashboardCanvas.height);
-            
-            // Draw the single Node
-            ctx.fillStyle = '#2d2d2d';
-            ctx.fillRect(node.x, node.y, node.width, node.height);
+            ctx.clearRect(0, 0, dashboardCanvas.width, dashboardCanvas.height);
+            
+            // Draw the single Node
+            ctx.fillStyle = '#2d2d2d';
+            ctx.fillRect(node.x, node.y, node.width, node.height);
 
-            const podRadius = 25;
-            const podSpacing = 20;
+            const podRadius = 25;
+            const podSpacing = 20;
 
-            const numCols = Math.floor(node.width / (podRadius * 2 + podSpacing));
-            const numRows = Math.floor(node.height / (podRadius * 2 + podSpacing));
-            
-            const startX = node.x + (node.width - (numCols * (podRadius * 2 + podSpacing))) / 2 + podSpacing / 2;
-            const startY = node.y + (node.height - (numRows * (podRadius * 2 + podSpacing))) / 2 + podSpacing / 2;
+            const numCols = Math.floor(node.width / (podRadius * 2 + podSpacing));
+            const numRows = Math.floor(node.height / (podRadius * 2 + podSpacing));
+            
+            const startX = node.x + (node.width - (numCols * (podRadius * 2 + podSpacing))) / 2 + podSpacing / 2;
+            const startY = node.y + (node.height - (numRows * (podRadius * 2 + podSpacing))) / 2 + podSpacing / 2;
 
-            const runningPods = pods.filter(p => p.status === 'Running');
-            const loadShare = runningPods.length > 0 ? (100 / runningPods.length) : 0;
+            const runningPods = pods.filter(p => p.status === 'Running');
+            const loadShare = runningPods.length > 0 ? (100 / runningPods.length) : 0;
 
-            pods.forEach((pod, index) => {
-                let color;
-                let scale = 1;
-                let isFilling = false;
-                let fillPercentage = 0;
+            pods.forEach((pod, index) => {
+                let color;
+                let scale = 1;
+                let isFilling = false;
+                let fillPercentage = 0;
 
-                if (pod.status === 'Running') {
-                    color = '#2d2d2d';
-                    isFilling = true;
-                    fillPercentage = loadShare;
-                    scale = 1;
-                } else if (pod.status === 'Terminating') {
-                    color = '#b91c1c';
-                    const progress = Math.min(1, (Date.now() - pod.animationStartTime) / 3000);
-                    scale = 1 - progress;
-                } else if (pod.status === 'Restored') {
-                    color = '#1e40af';
-                    const progress = Math.min(1, (Date.now() - pod.animationStartTime) / 4000);
-                    scale = progress;
-                }
-                
-                const col = index % numCols;
-                const row = Math.floor(index / numCols);
+                if (pod.status === 'Running') {
+                    color = '#2d2d2d';
+                    isFilling = true;
+                    fillPercentage = loadShare;
+                    scale = 1;
+                } else if (pod.status === 'Terminating') {
+                    color = '#b91c1c';
+                    const progress = Math.min(1, (Date.now() - pod.animationStartTime) / 3000);
+                    scale = 1 - progress;
+                } else if (pod.status === 'Restored') {
+                    color = '#1e40af';
+                    const progress = Math.min(1, (Date.now() - pod.animationStartTime) / 4000);
+                    scale = progress;
+                }
+                
+                const col = index % numCols;
+                const row = Math.floor(index / numCols);
 
-                const podPositionX = startX + col * (podRadius * 2 + podSpacing) + podRadius;
-                const podPositionY = startY + row * (podRadius * 2 + podSpacing) + podRadius;
-                
-                pod.x = podPositionX;
-                pod.y = podPositionY;
+                const podPositionX = startX + col * (podRadius * 2 + podSpacing) + podRadius;
+                const podPositionY = startY + row * (podRadius * 2 + podSpacing) + podRadius;
+                
+                pod.x = podPositionX;
+                pod.y = podPositionY;
 
 
-                ctx.save();
-                ctx.translate(pod.x, pod.y);
-                ctx.scale(scale, scale);
+                ctx.save();
+                ctx.translate(pod.x, pod.y);
+                ctx.scale(scale, scale);
 
-                // Draw base circle
-                ctx.beginPath();
-                ctx.arc(0, 0, podRadius, 0, 2 * Math.PI);
-                ctx.fillStyle = color;
-                ctx.fill();
+                // Draw base circle
+                ctx.beginPath();
+                ctx.arc(0, 0, podRadius, 0, 2 * Math.PI);
+                ctx.fillStyle = color;
+                ctx.fill();
 
-                if (isFilling) {
-                    const startAngle = -0.5 * Math.PI; // Start at the top
-                    const endAngle = startAngle + (fillPercentage / 100) * 2 * Math.PI;
-                    ctx.beginPath();
-                    ctx.moveTo(0, 0);
-                    ctx.arc(0, 0, podRadius, startAngle, endAngle);
-                    ctx.closePath();
-                    ctx.fillStyle = '#0d9488';
-                    ctx.fill();
-                }
-                
-                ctx.fillStyle = 'white';
-                ctx.font = '16px Inter';
-                ctx.textAlign = 'center';
-                ctx.textBaseline = 'middle';
-                // WICHTIG: Vermeidung von 'pod-deployment-' für eine bessere Anzeige.
-                const podNumber = index + 1; 
-                ctx.fillText(podNumber.toString(), 0, 0);
+                if (isFilling) {
+                    const startAngle = -0.5 * Math.PI; // Start at the top
+                    const endAngle = startAngle + (fillPercentage / 100) * 2 * Math.PI;
+                    ctx.beginPath();
+                    ctx.moveTo(0, 0);
+                    ctx.arc(0, 0, podRadius, startAngle, endAngle);
+                    ctx.closePath();
+                    ctx.fillStyle = '#0d9488';
+                    ctx.fill();
+                }
+                
+                ctx.fillStyle = 'white';
+                ctx.font = '16px Inter';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                
+                // NEUE LOGIK: Zeigt die Nummer aus dem Pod-Namen an (z.B. 'pod-deployment-3' -> '3')
+                const podNumber = pod.name.split('-').pop(); 
+                ctx.fillText(podNumber.toString(), 0, 0);
 
-                ctx.restore();
-            });
+                ctx.restore();
+            });
 
-            requestAnimationFrame(animateDashboard);
-        }
+            requestAnimationFrame(animateDashboard);
+        }
         animateDashboard();
 
         // The core "controller" logic (Reconciliation Loop)
@@ -1045,7 +1047,7 @@ spec:
                     "Ein Server im Cluster"
                 ],
                 answer: "Eine Gruppe von Containern, die zusammengehören",
-                explanation: "Ein **Pod** ist die kleinste Einheit, die Sie in Kubernetes erstellen und verwalten können. Er enthält eine oder mehrere Anwendungen, die in Containern laufen und sich Ressourcen wie Netzwerk und Speicher teilen."
+                explanation: "Ein Pod ist die kleinste Einheit, die Sie in Kubernetes erstellen und verwalten können. Er enthält eine oder mehrere Anwendungen, die in Containern laufen und sich Ressourcen wie Netzwerk und Speicher teilen."
             },
             {
                 question: "Was macht ein Deployment?",
@@ -1056,7 +1058,7 @@ spec:
                     "Es überwacht den Cluster"
                 ],
                 answer: "Es verwaltet die Anzahl Ihrer Pods",
-                explanation: "Ein **Deployment** stellt sicher, dass immer die gewünschte Anzahl (Replicas) Ihrer Pods im Cluster läuft. Wenn ein Pod ausfällt, erstellt es automatisch einen neuen."
+                explanation: "Ein Deployment stellt sicher, dass immer die gewünschte Anzahl (Replicas) Ihrer Pods im Cluster läuft. Wenn ein Pod ausfällt, erstellt es automatisch einen neuen."
             },
             {
                 question: "Was ist ein Node in Kubernetes?",
@@ -1067,7 +1069,7 @@ spec:
                     "Eine Konfigurationsdatei"
                 ],
                 answer: "Ein physischer oder virtueller Server",
-                explanation: "Ein **Node** ist eine physische oder virtuelle Maschine, die als 'Worker-Maschine' fungiert und Pods ausführt. Ein Kubernetes-Cluster besteht aus mehreren Nodes."
+                explanation: "Ein Node ist eine physische oder virtuelle Maschine, die als 'Worker-Maschine' fungiert und Pods ausführt. Ein Kubernetes-Cluster besteht aus mehreren Nodes."
             },
             {
                 question: "Wozu dient ein Service?",
@@ -1078,7 +1080,7 @@ spec:
                     "Als Weg, um Pods zu erreichen"
                 ],
                 answer: "Als Weg, um Pods zu erreichen",
-                explanation: "Ein **Service** ist ein statischer Endpunkt (mit einer festen IP-Adresse), der den Zugriff auf eine dynamische Gruppe von Pods ermöglicht. Er leitet Anfragen an die Pods weiter, auch wenn diese neu erstellt oder gelöscht werden."
+                explanation: "Ein Service ist ein statischer Endpunkt (mit einer festen IP-Adresse), der den Zugriff auf eine dynamische Gruppe von Pods ermöglicht. Er leitet Anfragen an die Pods weiter, auch wenn diese neu erstellt oder gelöscht werden."
             },
             {
                 question: "Was ist der Hauptzweck eines Namespaces?",
@@ -1089,18 +1091,18 @@ spec:
                     "Um die Pod-Skalierung zu steuern"
                 ],
                 answer: "Um Cluster-Ressourcen zu organisieren und zu isolieren",
-                explanation: "Ein **Namespace** hilft dabei, Ressourcen in einem Cluster zu organisieren. Er trennt verschiedene Anwendungen oder Teams logisch voneinander, was die Verwaltung und Sicherheit verbessert."
+                explanation: "Ein Namespace hilft dabei, Ressourcen in einem Cluster zu organisieren. Er trennt verschiedene Anwendungen oder Teams logisch voneinander, was die Verwaltung und Sicherheit verbessert."
             },
             {
-                question: "Was ist eine ConfigMap?",
+                question: "Was ist der primäre Zweck einer ConfigMap?",
                 options: [
                     "Eine Karte des Netzwerks",
                     "Ein Tool zur Container-Sicherheit",
-                    "Eine Möglichkeit, nicht-geheime Konfigurationsdaten zu speichern",
+                    "Eine Methode zur Trennung der Anwendungskonfiguration vom Container-Image",
                     "Ein Pod-Status-Report"
                 ],
-                answer: "Eine Möglichkeit, nicht-geheime Konfigurationsdaten zu speichern",
-                explanation: "Eine **ConfigMap** dient dazu, Konfigurationsdaten in Schlüssel-Wert-Paaren zu speichern. Diese Daten können dann von Pods genutzt werden, um ihre Einstellungen dynamisch zu ändern, ohne den Container-Image-Code anpassen zu müssen."
+                answer: "Eine Methode zur Trennung der Anwendungskonfiguration vom Container-Image",
+                explanation: "Eine ConfigMap dient dazu, Konfigurationsdaten (wie Umgebungsvariablen oder Konfigurationsdateien) in Schlüssel-Wert-Paaren zu speichern. Sie entkoppelt die Einstellungen von der Anwendung, was dynamische Änderungen ohne eine Neuerstellung des Container-Images erlaubt."
             },
             {
                 question: "Welche Komponente führt Container auf einem Node aus?",
@@ -1111,7 +1113,7 @@ spec:
                     "Der API Server"
                 ],
                 answer: "kubelet",
-                explanation: "Das **kubelet** ist ein Agent, der auf jedem Node im Cluster läuft. Seine Aufgabe ist es, mit der Control Plane zu kommunizieren und sicherzustellen, dass die Container, die in den Pods laufen sollen, auch wirklich laufen."
+                explanation: "Das kubelet ist ein Agent, der auf jedem Node im Cluster läuft. Seine Aufgabe ist es, mit der Control Plane zu kommunizieren und sicherzustellen, dass die Container, die in den Pods laufen sollen, auch wirklich laufen."
             },
             {
                 question: "Welche Befehlszeile wird zur Interaktion mit Kubernetes verwendet?",
@@ -1122,7 +1124,7 @@ spec:
                     "kubectl"
                 ],
                 answer: "kubectl",
-                explanation: "Das **kubectl**-Befehlszeilentool ist das Hauptwerkzeug für Administratoren und Entwickler, um Befehle an einen Kubernetes-Cluster zu senden und dessen Zustand zu verwalten."
+                explanation: "Das kubectl-Befehlszeilentool ist das Hauptwerkzeug für Administratoren und Entwickler, um Befehle an einen Kubernetes-Cluster zu senden und dessen Zustand zu verwalten."
             }
         ];
         let currentQuestionIndex = 0;
@@ -1245,19 +1247,21 @@ spec:
         const lexikonContent = document.getElementById('lexikon-content');
         const lexikonSearch = document.getElementById('lexikon-search');
 
-        const lexikonData = [
+        const lexikonData =
+        [
+            // --- BAUSTEINE (Was unsere App ausmacht) ---
             {
-                term: "Kubernetes",
-                definition: "Ein portables, erweiterbares Open-Source-System zur Verwaltung von containerisierten Workloads und Services. Es automatisiert die Bereitstellung, Skalierung und Verwaltung von Anwendungen in Containern. Ursprünglich von Google entwickelt, wird es heute von der Cloud Native Computing Foundation (CNCF) als eines der wichtigsten Open-Source-Projekte gepflegt."
+                term: "Kubernetes (K8s)",
+                definition: "Das ist das komplette <strong>Orchestrierungs-System</strong>. Stell es dir als einen „digitalen Bauleiter“ vor, der automatisch dafür sorgt, dass deine containerisierten Anwendungen (Microservices) immer stabil laufen, skaliert werden und sich selbst reparieren. Es ist der De-facto-Standard für Container-Verwaltung."
             },
             {
                 term: "Pod",
-                definition: "Der Pod ist die kleinste, deployable Einheit in Kubernetes. Ein Pod repräsentiert eine Gruppe von einem oder mehreren Containern, die eine gemeinsame logische Einheit bilden. Alle Container in einem Pod teilen sich dieselben Ressourcen, wie z.B. das Netzwerk und den Speicher, und werden als eine einzige Anwendung verwaltet. Dies ist ideal für eng gekoppelte Container, die zusammenarbeiten müssen.",
+                definition: "Die <strong>kleinste Einheit</strong> in Kubernetes. Ein Pod repräsentiert eine Gruppe von einem oder mehreren Containern (die sich Netzwerk und Speicher teilen), die als eine einzige, logische Anwendungseinheit verwaltet werden. Container innerhalb eines Pods kommunizieren über `localhost` miteinander.",
                 codeExample: `
 apiVersion: v1
 kind: Pod
 metadata:
-  name: my-first-pod
+  name: mein-erster-pod
 spec:
   containers:
   - name: web-container
@@ -1266,7 +1270,7 @@ spec:
             },
             {
                 term: "Deployment",
-                definition: "Ein Deployment ist ein API-Objekt, das die deklarative Verwaltung von Pods und ReplicaSets steuert. Der Hauptzweck eines Deployments ist es, sicherzustellen, dass eine gewünschte Anzahl von Pod-Replicas zu jeder Zeit läuft. Es erleichtert Rollouts (neue Versionen der Anwendung veröffentlichen), Rollbacks (zurück zur vorherigen Version) und das automatische Skalieren.",
+                definition: "Eine Bauanleitung für deine Anwendung. Ein Deployment definiert den <strong>gewünschten Zustand</strong> (z.B. 'Ich will 3 Replicas meiner App laufen haben'). Es steuert die Pods und sorgt für einfache Updates (<strong>Rolling Updates</strong>) und automatische Skalierung.",
                 codeExample: `
 apiVersion: apps/v1
 kind: Deployment
@@ -1288,49 +1292,72 @@ spec:
 `
             },
             {
+                term: "ReplicaSet",
+                definition: "Der 'Stabilisator' hinter dem Deployment. Ein ReplicaSet stellt sicher, dass <strong>immer die gewünschte Anzahl</strong> von Pods (Replicas) läuft. Fällt ein Pod aus, startet es sofort einen neuen Ersatz."
+            },
+            {
                 term: "Service",
-                definition: "Ein Service ist eine abstrakte Möglichkeit, eine Gruppe von Pods, die denselben Dienst ausführen, zu exponieren. Er dient als eine Art Lastverteiler. Ein Service hat eine feste IP-Adresse und einen DNS-Namen, über die andere Pods oder externe Systeme auf die Anwendung zugreifen können, ohne die einzelnen Pods direkt adressieren zu müssen. Dies ist entscheidend, da Pods dynamisch sind und ihre IP-Adressen sich ändern können.",
-                codeExample: `
-apiVersion: v1
-kind: Service
-metadata:
-  name: my-web-service
-spec:
-  selector:
-    app: web-app
-  ports:
-  - protocol: TCP
-    port: 80
-    targetPort: 80
-`
+                definition: "Ein <strong>fester Zugangspunkt</strong> für eine Gruppe von Pods. Services geben deinen Pods eine statische IP-Adresse und einen DNS-Namen. Das ist wie eine feste Telefonnummer für eine Hotline, auch wenn die Mitarbeiter (Pods) dahinter ständig wechseln."
             },
             {
                 term: "Namespace",
-                definition: "Ein Namespace bietet eine Möglichkeit, Ressourcen innerhalb eines Kubernetes-Clusters in logische, voneinander isolierte Gruppen zu partitionieren. Namespaces sind ideal, um Teams, Umgebungen (z. B. Entwicklung, Test, Produktion) oder verschiedene Anwendungen voneinander zu trennen und die Verwaltung zu vereinfachen, ohne separate Cluster zu benötigen."
+                definition: "Eine Möglichkeit, einen großen Kubernetes-Cluster in <strong>logische Unterbereiche</strong> zu unterteilen. Namespaces isolieren Ressourcen (z.B. 'Entwicklung' von 'Produktion') und helfen, Namenskonflikte zu vermeiden."
+            },
+
+            // --- CLUSTER-KOMPONENTEN (Control Plane & Node) ---
+            {
+                term: "Control Plane (Master)",
+                definition: "Das <strong>Gehirn</strong> des Clusters. Die Control Plane verwaltet den globalen Zustand von Kubernetes, trifft alle Entscheidungen (z.B. Planung von Pods) und reagiert auf Änderungen."
             },
             {
-                term: "ReplicaSet",
-                definition: "Ein ReplicaSet stellt sicher, dass zu jedem Zeitpunkt eine bestimmte, deklarativ festgelegte Anzahl von Pod-Replicas läuft. Wenn ein Pod ausfällt oder gelöscht wird, erstellt das ReplicaSet automatisch einen neuen, um die gewünschte Anzahl beizubehalten. Normalerweise wird ein ReplicaSet nicht direkt verwendet, sondern über ein Deployment, das seine Funktionalität steuert."
+                term: "Node (Worker Node)",
+                definition: "Die <strong>Arbeiter-Maschinen</strong> des Clusters. Nodes sind physische oder virtuelle Server, auf denen die Pods mit den eigentlichen Anwendungen ausgeführt werden."
             },
             {
-                term: "Node",
-                definition: "Ein Node ist eine physische oder virtuelle Maschine, die als Worker-Maschine in einem Kubernetes-Cluster fungiert. Nodes hosten die Pods und verfügen über Komponenten wie den Container-Laufzeitumgebung (z.B. Docker), kubelet und kube-proxy, um mit der Control Plane zu kommunizieren und Pods auszuführen."
+                term: "API Server (kube-apiserver)",
+                definition: "Der <strong>Front-End-Einstiegspunkt</strong> für den Cluster. Alle Befehle (z.B. `kubectl`) und alle internen Komponenten kommunizieren über diesen Server."
             },
             {
-                term: "Control Plane",
-                definition: "Die Control Plane ist das Gehirn des Kubernetes-Clusters. Sie verwaltet den Zustand des Clusters und trifft Entscheidungen, wie die Planung von Pods auf den Nodes, die Skalierung und die Aktualisierungen. Sie besteht aus mehreren Komponenten, darunter der API Server, der Scheduler und der Controller Manager."
+                term: "ETCD",
+                definition: "Die <strong>zentrale Datenbank</strong> von Kubernetes. ETCD speichert den gesamten Cluster-Zustand, also wer, was, wo laufen soll. Es sorgt für Konsistenz und ist hochverfügbar."
             },
             {
-                term: "Best Practices: Namespaces nutzen",
-                definition: "Verwenden Sie Namespaces, um Ihre Cluster-Ressourcen zu organisieren und zu isolieren. Das schafft eine saubere Trennung zwischen verschiedenen Anwendungen oder Teams und vereinfacht die Rechteverwaltung (RBAC)."
+                term: "Scheduler (kube-scheduler)",
+                definition: "Der 'Verteiler'. Er schaut sich neue Pods an und entscheidet, <strong>auf welchem Node</strong> dieser Pod am besten laufen soll."
             },
             {
-                term: "Best Practices: Ressourcenlimits festlegen",
-                definition: "Definieren Sie immer CPU- und Speicheranforderungen und -limits für Ihre Pods. Dies stellt sicher, dass Ihre Pods die Ressourcen erhalten, die sie benötigen, und verhindert, dass einzelne Pods zu viele Ressourcen verbrauchen und die Stabilität des Clusters beeinträchtigt."
+                term: "Controller Manager (kube-controller-manager)",
+                definition: "Der 'Zustands-Überwacher'. Er besteht aus vielen Controllern, die ständig den <strong>aktuellen Zustand</strong> mit dem <strong>gewünschten Zustand</strong> abgleichen und bei Abweichungen korrigierend eingreifen."
             },
             {
-                term: "Best Practices: Deklarativ arbeiten",
-                definition: "Nutzen Sie YAML-Dateien, um Ihre Kubernetes-Ressourcen deklarativ zu definieren. Anstatt dem Cluster zu sagen, wie er etwas tun soll (imperativ), sagen Sie ihm, wie der gewünschte Endzustand aussehen soll. Kubernetes sorgt dann automatisch dafür, dass dieser Zustand erreicht wird."
+                term: "Kubelet",
+                definition: "Ein <strong>Agent</strong>, der auf jedem Worker Node läuft. Er ist die lokale Schnittstelle und stellt sicher, dass die Container eines Pods auf dem Node tatsächlich gestartet und am Laufen gehalten werden."
+            },
+            {
+                term: "kube-proxy",
+                definition: "Ein Netzwerk-Helfer auf jedem Node. Er ist dafür zuständig, dass der <strong>Netzwerkverkehr</strong> von einem Service korrekt an die richtigen Pods weitergeleitet wird."
+            },
+            {
+                term: "Container Runtime Interface (CRI)",
+                definition: "Eine Schnittstelle, die es Kubernetes ermöglicht, mit verschiedenen <strong>Container-Laufzeitumgebungen</strong> (wie Docker oder containerd) zu sprechen und Container auszuführen."
+            },
+
+            // --- PROZESSE & WERKZEUGE ---
+            {
+                term: "Deklarativer Ansatz",
+                definition: "Die Best Practice in Kubernetes. Anstatt dem System zu sagen, *wie* es etwas tun soll (imperativ), beschreibst du nur den <strong>gewünschten Endzustand</strong> in einer YAML-Datei, und Kubernetes kümmert sich um den Rest."
+            },
+            {
+                term: "Self-Healing (Selbstheilung)",
+                definition: "Die Fähigkeit von Kubernetes, Ausfälle automatisch zu erkennen und zu beheben. Wenn ein Pod abstürzt, startet Kubernetes sofort einen <strong>neuen Ersatz-Pod</strong>.",
+            },
+            {
+                term: "Rolling Update",
+                definition: "Der Prozess, eine neue Version deiner Anwendung <strong>schrittweise</strong> auszurollen. Dabei wird ein Teil der alten Pods durch neue ersetzt, ohne die Verfügbarkeit zu unterbrechen."
+            },
+            {
+                term: "kubectl",
+                definition: "Das offizielle <strong>Kommandozeilen-Tool (CLI)</strong>. Es ist dein Werkzeug, um mit dem API Server zu kommunizieren, Befehle auszuführen, Ressourcen zu erstellen und den Cluster-Zustand zu überprüfen."
             }
         ];
 
@@ -1338,13 +1365,13 @@ spec:
             lexikonSummary.innerHTML = `
                 <p class="text-lg font-semibold text-gray-200 mb-2">Was ist Kubernetes?</p>
                 <p class="text-gray-300">
-                    Willkommen im Kubernetes-Lexikon! Kubernetes, auch K8s genannt, ist ein Open-Source-System, das ursprünglich von Google entwickelt wurde und heute von der Cloud Native Computing Foundation (CNCF) betreut wird. Seine Hauptaufgabe ist die **Orchestrierung von Containern**.  Das bedeutet, es automatisiert die Bereitstellung, Skalierung und Verwaltung Ihrer Anwendungen, die in Containern laufen.
+                    Willkommen im Kubernetes-Lexikon! Kubernetes, auch K8s genannt, ist ein Open-Source-System, das ursprünglich von Google entwickelt wurde und heute von der Cloud Native Computing Foundation (CNCF) betreut wird. Seine Hauptaufgabe ist die <strong>Orchestrierung von Containern</strong>.  Das bedeutet, es automatisiert die Bereitstellung, Skalierung und Verwaltung Ihrer Anwendungen, die in Containern laufen.
                 </p>
                 <p class="text-gray-300 mt-2">
                     Stellen Sie sich vor, Sie haben viele kleine, isolierte Bausteine (Ihre Anwendungen in Containern) und möchten eine große, stabile Struktur (Ihre gesamte Anwendung) bauen. Kubernetes ist der "Bauleiter", der dafür sorgt, dass diese Bausteine automatisch an den richtigen Stellen platziert werden, bei Bedarf neue Bausteine hinzugefügt oder alte ersetzt werden. So stellt es sicher, dass Ihre Anwendung immer verfügbar und effizient ist.
                 </p>
                 <p class="text-gray-300 mt-2">
-                    Die Architektur von Kubernetes basiert auf zwei Hauptkomponenten: einer zentralen **Control Plane** und den **Worker Nodes**. Die Control Plane ist das Gehirn des Clusters. Sie trifft alle Entscheidungen und überwacht den Zustand. Die Worker Nodes sind die Arbeiter, die die eigentliche Last tragen und Ihre Pods ausführen.
+                    Die Architektur von Kubernetes basiert auf zwei Hauptkomponenten: einer zentralen <strong>Control Plane</strong> und den <strong>Worker Nodes</strong>. Die Control Plane ist das Gehirn des Clusters. Sie trifft alle Entscheidungen und überwacht den Zustand. Die Worker Nodes sind die Arbeiter, die die eigentliche Last tragen und Ihre Pods ausführen.
                 </p>
             `;
         }
